@@ -1,2 +1,2 @@
-# clothing-modeler
-24671 capstone project code repo
+# Clothing Auto-Modeler
+24671 Capstone Project code repo
