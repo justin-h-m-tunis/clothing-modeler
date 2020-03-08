@@ -20,7 +20,7 @@ class GuiView(object):
         
     def create_app_name(self):
         self.intro_text = tk.Text(self.left_frame, fg="white", bg=WIN_BG_COLOR,
-            font="DengXian 20", state="normal", wrap="word", height=2, width=12,
+            font="Ubuntu 20", state="normal", wrap="word", height=2, width=12,
             relief="flat")
         self.intro_text.tag_configure("center", justify='center')
         self.intro_text.insert("1.0", APP_NAME)

@@ -5,6 +5,10 @@ from pubsub import pub
 from ctypes import windll
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
+import open3d as o3d
+import threading
+import multiprocessing, pickle
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -34,6 +38,10 @@ class GuiController(object):
         self.help_menu.add_command(label="About...", command=self.do_nothing)
         self.menubar.add_cascade(label="Help", menu=self.help_menu)
 
+        self.tool_menu = tk.Menu(self.menubar, tearoff=0)
+        self.tool_menu.add_command(label="View Model", command=self.open_ply)
+        self.menubar.add_cascade(label="Tools", menu=self.tool_menu)
+
         window.config(menu=self.menubar)
 
     def bind_intro_text(self):
@@ -45,9 +53,18 @@ class GuiController(object):
 
     def scale_font(self, event):
         if (window.winfo_width() < 900):
-            self.view.intro_text.config(font="DengXian 16")
+            self.view.intro_text.config(font="Ubuntu 16")
         else:
-            self.view.intro_text.config(font="DengXian 20")
+            self.view.intro_text.config(font="Ubuntu 20")
+
+    def open_ply(self):
+        self.path_name = filedialog.askopenfilename(initialdir = "/", title = "Select ply file", filetypes = (("ply files","*.ply"),))
+        print(self.path_name)
+        if (self.path_name == ""):
+            return
+        
+        self.p = multiprocessing.Process(target=gui_model.view_ply, args=(self.path_name,))
+        self.p.start()
 
 def on_closing():
     if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
