@@ -17,7 +17,13 @@ class GuiView(object):
         self.window_height = self.window.winfo_height()
         self.create_widgets()
         self.setup_layout()
-        
+
+    def create_quick_start(self):
+        self.q_start_button = tk.Button(self.left_frame, text="Quick Start", 
+            fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+
     def create_app_name(self):
         self.intro_text = tk.Text(self.left_frame, fg="white", bg=WIN_BG_COLOR,
             font="Ubuntu 20", state="normal", wrap="word", height=2, width=12,
@@ -38,11 +44,16 @@ class GuiView(object):
         self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR)
         self.create_app_name()
         self.create_logo()
+        # self.q_start_button = tk.Button(self.left_frame, text="Quick Start",
+        #     font="Ubuntu 12", relief="flat", bg = "#4070f5",
+        #     fg="white", wraplength=5)
+        self.create_quick_start()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
         self.right_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
 
 

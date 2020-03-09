@@ -24,32 +24,46 @@ class GuiController(object):
     def init_view(self, parent):
         self.view = gui_view.GuiView(parent)
         self.bind_intro_text()
+        self.bind_q_start()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
         self.file_menu.add_command(label="New", command=self.do_nothing)
-        self.file_menu.add_command(label="Open", command=self.do_nothing)
-        self.file_menu.add_command(label="Save", command=self.do_nothing)
+        # self.file_menu.add_command(label="Open", command=self.do_nothing)
+        # self.file_menu.add_command(label="Save", command=self.do_nothing)
+        self.file_menu.add_separator()
+        self.file_menu.add_command(label="Exit", command=on_closing)
         self.menubar.add_cascade(label="File", menu=self.file_menu)
+
+        self.tool_menu = tk.Menu(self.menubar, tearoff=0)
+        self.tool_menu.add_command(label="View Model", command=self.open_ply)
+        self.menubar.add_cascade(label="Tools", menu=self.tool_menu)
 
         self.help_menu = tk.Menu(self.menubar, tearoff=0)
         self.help_menu.add_command(label="Help Index", command=self.do_nothing)
         self.help_menu.add_command(label="About...", command=self.do_nothing)
         self.menubar.add_cascade(label="Help", menu=self.help_menu)
 
-        self.tool_menu = tk.Menu(self.menubar, tearoff=0)
-        self.tool_menu.add_command(label="View Model", command=self.open_ply)
-        self.menubar.add_cascade(label="Tools", menu=self.tool_menu)
-
         window.config(menu=self.menubar)
 
     def bind_intro_text(self):
         self.view.intro_text.bind("<Configure>", self.scale_font)
 
+    def bind_q_start(self):
+        self.view.q_start_button.bind("<Enter>",
+            lambda e: self.view.q_start_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.q_start_button.bind("<Leave>",
+            lambda e: self.view.q_start_button.configure(bg = BUTTON_COLOR))
+        self.view.q_start_button.bind("<ButtonRelease-1>", self.run_system)
+
     '''Actions on key binding'''
     def do_nothing(self):
         pass
+
+    '''Main logic execution'''
+    def run_system(self, event):
+        print("3D scanning system start with default settings")
 
     def scale_font(self, event):
         if (window.winfo_width() < 900):
