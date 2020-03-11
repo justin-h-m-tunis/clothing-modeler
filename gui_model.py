@@ -1,11 +1,23 @@
 from gui_config import *
 import open3d as o3d
+import serial
 
 class GuiModel(object):
     """description of class"""
 
     def __init__(self):
-        pass
+        try:
+            self.uno = serial.Serial('COM8', 9600)
+        except:
+            print("Error! Motor not connected!")
+        
+        # pass
+
+    def blink_led(self):
+        print("led blinking")
+        msg = 't'
+        # self.uno = serial.Serial('COM8', 9600)
+        self.uno.write(msg.encode())
 
 '''
 View ply 3D models using given path

@@ -64,6 +64,7 @@ class GuiController(object):
     '''Main logic execution'''
     def run_system(self, event):
         print("3D scanning system start with default settings")
+        self.model.blink_led()
 
     def scale_font(self, event):
         if (window.winfo_width() < 900):
