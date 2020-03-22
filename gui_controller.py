@@ -25,6 +25,7 @@ class GuiController(object):
         self.view = gui_view.GuiView(parent)
         self.bind_intro_text()
         self.bind_q_start()
+        self.bind_adv_option()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -57,6 +58,13 @@ class GuiController(object):
             lambda e: self.view.q_start_button.configure(bg = BUTTON_COLOR))
         self.view.q_start_button.bind("<ButtonRelease-1>", self.run_system)
 
+    def bind_adv_option(self):
+        self.view.adv_option.bind("<Enter>",
+            lambda e: self.view.opt_font.configure(underline = True))
+        self.view.adv_option.bind("<Leave>",
+            lambda e: self.view.opt_font.configure(underline = False))
+        self.view.adv_option.bind("<ButtonRelease-1>", self.run_adv_option)
+
     '''Actions on key binding'''
     def do_nothing(self):
         pass
@@ -65,6 +73,10 @@ class GuiController(object):
     def run_system(self, event):
         print("3D scanning system start with default settings")
         self.model.blink_led()
+
+    '''Place holder for advanced options'''
+    def run_adv_option(self, event):
+        print("Opening advanced menu")
 
     def scale_font(self, event):
         if (window.winfo_width() < 900):

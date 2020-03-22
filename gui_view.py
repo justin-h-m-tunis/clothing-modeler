@@ -1,4 +1,5 @@
 from gui_config import *
+from tkinter import font
 import tkinter as tk
 import gui_controller
 from pubsub import pub
@@ -24,6 +25,12 @@ class GuiView(object):
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
 
+    def create_adv_options(self):
+        self.adv_option = tk.Label(self.left_frame, text="Advanced", fg="white",
+            bg=WIN_BG_COLOR, font="Ubuntu 10")
+        self.opt_font = font.Font(self.adv_option, self.adv_option.cget("font"))
+        self.adv_option.configure(font=self.opt_font)
+
     def create_app_name(self):
         self.intro_text = tk.Text(self.left_frame, fg="white", bg=WIN_BG_COLOR,
             font="Ubuntu 20", state="normal", wrap="word", height=2, width=12,
@@ -48,6 +55,7 @@ class GuiView(object):
         #     font="Ubuntu 12", relief="flat", bg = "#4070f5",
         #     fg="white", wraplength=5)
         self.create_quick_start()
+        self.create_adv_options()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
@@ -55,5 +63,6 @@ class GuiView(object):
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
         self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
+        self.adv_option.place(anchor="center", relx=0.5, rely=0.85)
 
 
