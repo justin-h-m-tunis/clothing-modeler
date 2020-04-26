@@ -1,5 +1,5 @@
 from gui_config import *
-from tkinter import font
+from tkinter import font, ttk
 import tkinter as tk
 import gui_controller
 from PIL import ImageTk, Image
@@ -45,6 +45,19 @@ class GuiView(object):
         self.logo_img = ImageTk.PhotoImage(Image.open(path).resize((200,200)))
         self.logo_label = tk.Label(self.right_frame, image = self.logo_img, bg=RIGHT_FRAME_COLOR)
 
+    def create_progress_bar(self):
+        s = ttk.Style()
+        s.theme_use('clam')
+        TROUGH_COLOR = PROGRESS_BAR_BG
+        BAR_COLOR = PROGRESS_BAR_COLOR
+        s.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR, bordercolor=TROUGH_COLOR, background=BAR_COLOR, lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
+        self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", 
+            length = WIN_MIN_WIDTH/2, mode = 'determinate', style="bar.Horizontal.TProgressbar")
+        self.progress["maximum"] = 100
+
+    def update_progress_bar(self, curr_step, max_step):
+        self.progress["value"] = max_step // curr_step
+
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
         self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR)
@@ -55,6 +68,7 @@ class GuiView(object):
         #     fg="white", wraplength=5)
         self.create_quick_start()
         self.create_adv_options()
+        self.create_progress_bar()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
@@ -63,5 +77,6 @@ class GuiView(object):
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
         self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
         self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
+        self.progress.place(anchor="center", relx=0.5, rely=0.87)
 
 

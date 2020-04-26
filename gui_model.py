@@ -13,7 +13,10 @@ class GuiModel(object):
             self.camera = Camera()
         except:
             print("Error! Please check hardware connectivity")
-        
+
+    def set_image_path(self, img_path):
+        self.pathname = img_path
+
     def run_motor_camera(self):
         self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname))
 

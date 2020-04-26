@@ -72,6 +72,7 @@ class GuiController(object):
     def run_system(self, event):
         print("3D scanning system start with default settings")
         self.model.run_motor_camera()
+        # self.update_progress(20, 100)
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
@@ -94,6 +95,9 @@ class GuiController(object):
         
         self.p = multiprocessing.Process(target=gui_model.view_ply, args=(self.path_name,))
         self.p.start()
+
+    def update_progress(self, curr_step, max_step):
+        self.view.update_progress_bar(curr_step, max_step)
 
 def on_closing():
     if tk.messagebox.askokcancel("Quit", "Do you want to quit?"):
