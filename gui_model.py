@@ -14,7 +14,7 @@ class GuiModel(object):
             print("Error! Please check hardware connectivity")
         
     def run_motor_camera(self):
-        self.motor.fullRotation(cond=lambda num: camera.captureRGBD(num, show_image=False))
+        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False))
 
 '''
 View ply 3D models using given path
