@@ -1,23 +1,20 @@
 from gui_config import *
 import open3d as o3d
 import serial
+from motor_camera import Motor, Camera
 
 class GuiModel(object):
     """description of class"""
 
     def __init__(self):
         try:
-            self.uno = serial.Serial('COM8', 9600)
+            self.motor = Motor(macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3',onSerialFail=lambda : print("Cannot find motor!"))
+            self.camera = Camera()
         except:
-            print("Error! Motor not connected!")
+            print("Error! Please check hardware connectivity")
         
-        # pass
-
-    def blink_led(self):
-        print("led blinking")
-        msg = 't'
-        # self.uno = serial.Serial('COM8', 9600)
-        self.uno.write(msg.encode())
+    def run_motor_camera(self):
+        self.motor.fullRotation(cond=lambda num: camera.captureRGBD(num, show_image=False))
 
 '''
 View ply 3D models using given path

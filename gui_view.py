@@ -2,7 +2,6 @@ from gui_config import *
 from tkinter import font
 import tkinter as tk
 import gui_controller
-from pubsub import pub
 from PIL import ImageTk, Image
 from pathlib import Path
 import os
@@ -63,6 +62,6 @@ class GuiView(object):
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
         self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
-        self.adv_option.place(anchor="center", relx=0.5, rely=0.85)
+        self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
 
 

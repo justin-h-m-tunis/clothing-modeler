@@ -1,14 +1,13 @@
 from gui_config import *
 import gui_model
 import gui_view
-from pubsub import pub
 from ctypes import windll
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
 import open3d as o3d
-import threading
-import multiprocessing, pickle
+import multiprocessing
+from motor_camera import *
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -43,7 +42,7 @@ class GuiController(object):
 
         self.help_menu = tk.Menu(self.menubar, tearoff=0)
         self.help_menu.add_command(label="Help Index", command=self.do_nothing)
-        self.help_menu.add_command(label="About...", command=self.do_nothing)
+        self.help_menu.add_command(label="About", command=self.open_about)
         self.menubar.add_cascade(label="Help", menu=self.help_menu)
 
         window.config(menu=self.menubar)
@@ -72,7 +71,7 @@ class GuiController(object):
     '''Main logic execution'''
     def run_system(self, event):
         print("3D scanning system start with default settings")
-        self.model.blink_led()
+        self.model.run_motor_camera()
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
@@ -83,6 +82,9 @@ class GuiController(object):
             self.view.intro_text.config(font="Ubuntu 16")
         else:
             self.view.intro_text.config(font="Ubuntu 20")
+
+    def open_about(self):
+        tk.messagebox.showinfo("About", ABOUT_TEXT)
 
     def open_ply(self):
         self.path_name = filedialog.askopenfilename(initialdir = "/", title = "Select ply file", filetypes = (("ply files","*.ply"),))
