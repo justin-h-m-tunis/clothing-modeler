@@ -56,7 +56,7 @@ class GuiView(object):
         self.progress["maximum"] = 100
 
     def update_progress_bar(self, curr_step, max_step):
-        self.progress["value"] = max_step // curr_step
+        self.progress["value"] = curr_step // max_step
 
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)

@@ -18,7 +18,7 @@ class GuiController(object):
         self.init_view(parent)
 
     def init_model(self):
-        self.model = gui_model.GuiModel()
+        self.model = gui_model.GuiModel(updateFn=lambda n: self.update_progress(n,200),total_macrosteps=200)
 
     def init_view(self, parent):
         self.view = gui_view.GuiView(parent)
@@ -72,7 +72,6 @@ class GuiController(object):
     def run_system(self, event):
         print("3D scanning system start with default settings")
         self.model.run_motor_camera()
-        # self.update_progress(20, 100)
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
@@ -97,6 +96,7 @@ class GuiController(object):
         self.p.start()
 
     def update_progress(self, curr_step, max_step):
+        print(curr_step,"/",max_step)
         self.view.update_progress_bar(curr_step, max_step)
 
 def on_closing():
