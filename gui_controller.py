@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
 import open3d as o3d
-import multiprocessing
+import multiprocessing, time
 from motor_camera import *
 
 class GuiController(object):
@@ -71,8 +71,10 @@ class GuiController(object):
     '''Main logic execution'''
     def run_system(self, event):
         print("3D scanning system start with default settings")
-        self.model.run_motor_camera()
+        self.model.run_motor_camera(self)
         # self.update_progress(20, 100)
+        # time.sleep(3)
+        # self.model.run_call_back(self)
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
