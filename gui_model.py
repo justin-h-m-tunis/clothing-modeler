@@ -1,18 +1,18 @@
 from gui_config import *
 import open3d as o3d
 import serial
-from motor_camera import Motor, Camera
+from motor_camera.Motor import *
+from motor_camera.Camera import *
+
 
 class GuiModel(object):
     """description of class"""
 
     def __init__(self):
         self.pathname = "data/"
-        try:
-            self.motor = Motor(macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3',onSerialFail=lambda : print("Cannot find motor!"))
-            self.camera = Camera()
-        except:
-            print("Error! Please check hardware connectivity")
+        self.motor = Motor(macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3',onSerialFail=lambda : print("Error! Please check hardware connectivity"))
+        self.camera = Camera()
+
 
     def set_image_path(self, img_path):
         self.pathname = img_path
