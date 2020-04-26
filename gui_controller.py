@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
 import open3d as o3d
-import multiprocessing
+import multiprocessing, time
 from motor_camera import *
 
 class GuiController(object):

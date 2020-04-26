@@ -1,10 +1,10 @@
 from gui_config import *
-from tkinter import font, ttk
+from tkinter import DoubleVar, font, ttk
 import tkinter as tk
 import gui_controller
 from PIL import ImageTk, Image
 from pathlib import Path
-import os
+import os, random
 #from ctypes import windll
 
 class GuiView(object):
@@ -15,6 +15,7 @@ class GuiView(object):
         self.window = parent # window
         self.window_width = self.window.winfo_width()
         self.window_height = self.window.winfo_height()
+        self.progress = None
         self.create_widgets()
         self.setup_layout()
 
@@ -51,12 +52,28 @@ class GuiView(object):
         TROUGH_COLOR = PROGRESS_BAR_BG
         BAR_COLOR = PROGRESS_BAR_COLOR
         s.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR, bordercolor=TROUGH_COLOR, background=BAR_COLOR, lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
-        self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", 
+        self.progress_var = DoubleVar()
+        self.progress_var.set(0)
+        self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", variable=self.progress_var,
             length = WIN_MIN_WIDTH/2, mode = 'determinate', style="bar.Horizontal.TProgressbar")
         self.progress["maximum"] = 100
 
     def update_progress_bar(self, curr_step, max_step):
-        self.progress["value"] = curr_step // max_step
+
+        # print("in view")
+        # print(int(curr_step / max_step * 100))
+        # self.progress["value"] = int(curr_step / max_step * 100)
+        # self.progress.destroy()
+        # self.progress_var = DoubleVar()
+        # self.progress_var.set(int(curr_step / max_step * 100))
+        # self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", variable=self.progress_var,
+        #     length = WIN_MIN_WIDTH/2, mode = 'determinate', style="bar.Horizontal.TProgressbar")
+        # self.progress.place(anchor="center", relx=0.5, rely=0.87)
+        
+        
+        self.progress_var.set(int(curr_step / max_step * 100))
+        self.progress.update()
+        # self.progress_var.set(max_step // curr_step)
 
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)

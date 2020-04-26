@@ -3,6 +3,7 @@ import open3d as o3d
 import serial
 from motor_camera.Motor import *
 from motor_camera.Camera import *
+# from call_back import *
 
 
 class GuiModel(object):
@@ -15,12 +16,12 @@ class GuiModel(object):
         self.updateFn=updateFn
         self.cond = lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname) and additional_conds
 
-
     def set_image_path(self, img_path):
         self.pathname = img_path
 
     def run_motor_camera(self):
         self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname), updateFn=self.updateFn)
+
 
 '''
 View ply 3D models using given path
