@@ -59,21 +59,8 @@ class GuiView(object):
         self.progress["maximum"] = 100
 
     def update_progress_bar(self, curr_step, max_step):
-
-        # print("in view")
-        # print(int(curr_step / max_step * 100))
-        # self.progress["value"] = int(curr_step / max_step * 100)
-        # self.progress.destroy()
-        # self.progress_var = DoubleVar()
-        # self.progress_var.set(int(curr_step / max_step * 100))
-        # self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", variable=self.progress_var,
-        #     length = WIN_MIN_WIDTH/2, mode = 'determinate', style="bar.Horizontal.TProgressbar")
-        # self.progress.place(anchor="center", relx=0.5, rely=0.87)
-        
-        
         self.progress_var.set(int(curr_step / max_step * 100))
         self.progress.update()
-        # self.progress_var.set(max_step // curr_step)
 
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
