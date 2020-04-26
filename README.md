@@ -1,5 +1,5 @@
 # Clothing Auto-Modeler
-24671 Capstone Project code repo
+Group project for 24671 Electromechanical Systems Design course offered by Carnegie Mellon University in the Spring of 2020. This is a collective work by Justin Tunis, Shu You, and Allen Jiang.
 
 ## Dependencies
 This project is impelemted and tested using Python 3.7.4 64 bit on Windows 10 platform. It is not tested on other python versions or platforms, but generally it should work for any python 3 versions. Hardware COM port might need to be changed according to your specific configuration. Please make sure you install the following external depencies and the code can properly import them.  
