@@ -8,7 +8,7 @@ This project is impelemted and tested using Python 3.7.4 64 bit on Windows 10 pl
 - PIL
 - pathlib  
 - SciPy
-- Numpy
+- Numpy  
 For your covenience, you may paste the following command into you command prompt. Make sure either pip is specified by your system PATH or run the command in the directory where your pip locates in.
 ```
 pip install open3d pykinect2 Pillow pathlib scipy numpy
