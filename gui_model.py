@@ -9,19 +9,19 @@ from motor_camera.Camera import *
 class GuiModel(object):
     """description of class"""
 
-    def __init__(self):
+    def __init__(self, updateFn=lambda n: None, additional_conds= lambda n: True, macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3'):
         self.pathname = "data/"
-        self.motor = Motor(macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3',onSerialFail=lambda : print("Error! Please check hardware connectivity"))
+        self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=total_macrosteps,baudrate=baudrate,com=com,onSerialFail=lambda : print("Error! Please check hardware connectivity"))
         self.camera = Camera()
+        self.updateFn=updateFn
+        self.cond = lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname) and additional_conds
 
     def set_image_path(self, img_path):
         self.pathname = img_path
 
-    def run_motor_camera(self, control_instance):
-        self.motor.fullRotation(control_instance, cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname))
+    def run_motor_camera(self):
+        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname), updateFn=self.updateFn)
 
-    # def run_call_back(self, control_instance):
-    #     cb = CallBack(control_instance)
 
 '''
 View ply 3D models using given path

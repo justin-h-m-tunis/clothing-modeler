@@ -59,6 +59,7 @@ class GuiView(object):
         self.progress["maximum"] = 100
 
     def update_progress_bar(self, curr_step, max_step):
+
         # print("in view")
         # print(int(curr_step / max_step * 100))
         # self.progress["value"] = int(curr_step / max_step * 100)
