@@ -33,4 +33,4 @@ class Motor:
                 self.ser.write('\n'.encode())
 
     def fullRotation(self, cond=lambda n: True, updateFn=lambda n: print("Step "+str(n) + " completed!")):  # Executes a full rotation of the motor
-        self.macrostep(self.total,cond,updateFn)
+        self.macrostep(self.total,cond=cond,updateFn=updateFn)

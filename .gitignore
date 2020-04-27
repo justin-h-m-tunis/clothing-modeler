@@ -1,0 +1,3 @@
+*.pyc
+*.png
+open3d\__init__.py

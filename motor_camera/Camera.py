@@ -141,5 +141,5 @@ class Camera:
             cv2.imshow('color x depth', cv2.line(colorFrame, (int(len(colorFrame[0]) / 2), 0),
                                     (int(len(colorFrame[0]) / 2), len(colorFrame[0])), (0, 0, 255)))
             cv2.waitKey(1)
-            print("Images captured!")
+        print("Images captured!")
         return True

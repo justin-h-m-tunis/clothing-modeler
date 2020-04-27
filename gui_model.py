@@ -9,7 +9,7 @@ from motor_camera.Camera import *
 class GuiModel(object):
     """description of class"""
 
-    def __init__(self, updateFn=lambda n: None, additional_conds= lambda n: True, macrostep_time=160,total_macrosteps=200,baudrate=9600,com='COM3'):
+    def __init__(self, updateFn=lambda n: None, additional_conds= lambda n: True, macrostep_time=550,total_macrosteps=200,baudrate=9600,com='COM3'):
         self.pathname = "data/"
         self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=total_macrosteps,baudrate=baudrate,com=com,onSerialFail=lambda : print("Error! Please check hardware connectivity"))
         self.camera = Camera()
