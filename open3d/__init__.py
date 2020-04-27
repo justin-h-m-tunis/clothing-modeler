@@ -32,7 +32,7 @@ try:
 except:
     pass
 
-from .open3d import * # py2 py3 compatible
+from open3d import * # py2 py3 compatible
 
 __version__ = '0.9.0.0'
 
