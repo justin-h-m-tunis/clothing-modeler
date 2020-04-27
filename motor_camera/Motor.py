@@ -15,7 +15,7 @@ class Motor:
             except serial.SerialException:
                 self.ser = None
                 onSerialFail()
-                time.sleep(3)
+                time.sleep(3) # wait for 3 seconds and retry
                 continue
             break
         print("Connection success!")
