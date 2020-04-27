@@ -16,6 +16,7 @@ class GuiController(object):
         self.init_model()
         self.init_menu()
         self.init_view(parent)
+        self.parent = parent
 
     def init_model(self):
         self.model = gui_model.GuiModel(updateFn=lambda n: self.update_progress(n,200),total_macrosteps=200)
@@ -29,8 +30,8 @@ class GuiController(object):
     def init_menu(self):
         self.menubar = tk.Menu(window)
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.file_menu.add_command(label="New", command=self.do_nothing)
-        # self.file_menu.add_command(label="Open", command=self.do_nothing)
+        self.file_menu.add_command(label="Import...", command=self.do_nothing)
+        self.file_menu.add_command(label="Export...", command=self.do_nothing)
         # self.file_menu.add_command(label="Save", command=self.do_nothing)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=on_closing)
@@ -41,7 +42,7 @@ class GuiController(object):
         self.menubar.add_cascade(label="Tools", menu=self.tool_menu)
 
         self.help_menu = tk.Menu(self.menubar, tearoff=0)
-        self.help_menu.add_command(label="Help Index", command=self.do_nothing)
+        # self.help_menu.add_command(label="Help Index", command=self.do_nothing)
         self.help_menu.add_command(label="About", command=self.open_about)
         self.menubar.add_cascade(label="Help", menu=self.help_menu)
 
@@ -75,7 +76,8 @@ class GuiController(object):
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
-        print("Opening advanced menu")
+        print("Opening settings panel")
+        self.view.manage_settings(self.parent)
 
     def scale_font(self, event):
         if (window.winfo_width() < 900):

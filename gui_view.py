@@ -1,7 +1,7 @@
 from gui_config import *
 from tkinter import DoubleVar, font, ttk
 import tkinter as tk
-import gui_controller
+import gui_controller, gui_view_settings
 from PIL import ImageTk, Image
 from pathlib import Path
 import os, random
@@ -16,8 +16,10 @@ class GuiView(object):
         self.window_width = self.window.winfo_width()
         self.window_height = self.window.winfo_height()
         self.progress = None
+        self.settings_open = True
         self.create_widgets()
         self.setup_layout()
+        self.settings_panel = gui_view_settings.GuiViewSettings(parent)
 
     def create_quick_start(self):
         self.q_start_button = tk.Button(self.left_frame, text="Quick Start", 
@@ -26,7 +28,7 @@ class GuiView(object):
             activeforeground="white")
 
     def create_adv_options(self):
-        self.adv_option = tk.Label(self.left_frame, text="Advanced", fg="white",
+        self.adv_option = tk.Label(self.left_frame, text="Settings", fg="white",
             bg=WIN_BG_COLOR, font="Ubuntu 10")
         self.opt_font = font.Font(self.adv_option, self.adv_option.cget("font"))
         self.adv_option.configure(font=self.opt_font)
@@ -62,6 +64,16 @@ class GuiView(object):
         print("Progress bar updated")
         self.progress_var.set(int(curr_step / max_step * 100))
         self.progress.update()
+
+    def manage_settings(self, parent):
+        if (self.settings_open): # open settings panel
+            self.settings_panel.setup_layout()
+            self.settings_open = False
+        else:
+            self.settings_panel.forget_layout()
+            self.settings_open = True
+            
+
 
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
