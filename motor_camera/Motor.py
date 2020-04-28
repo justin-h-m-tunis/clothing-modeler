@@ -9,16 +9,13 @@ class Motor:
         #sets total macrosteps
         self.total = total_macrosteps
         #opens serial communication on com at baudrate
-        while True:
-            try:
-                self.ser = serial.Serial(port=com,baudrate=baudrate)
-            except serial.SerialException:
-                self.ser = None
-                onSerialFail()
-                time.sleep(3) # wait for 3 seconds and retry
-                continue
-            break
-        print("Connection success!")
+        try:
+            self.ser = serial.Serial(port=com,baudrate=baudrate)
+            print("Connection success!")
+        except serial.SerialException:
+            self.ser = None
+            onSerialFail()
+            print("Motor Connection Failed")
 
     # Completes n macrosteps of the motor, checks cond before each step
     # it is a blocking call, so should be parellelized with cond = camera.captureRGBD()
