@@ -34,7 +34,7 @@ def removeBkg(img,dist,thresh,combine='or',kernel=5):
     obj = np.ma.array(img,mask=np.repeat(m,np.size(img,axis=2)))
     return obj.filled(0)
 
-
+'''
 if __name__ == '__main__':
     img_path = 'data/color/'
     depth_path = 'data/depth/'
@@ -59,3 +59,4 @@ if __name__ == '__main__':
         cv2.imwrite('data/thresholded/' + f[1], bkg_thresh_depth)
         cv2.imwrite('data/pretty/' + f[0],(rgb_dist*np.sqrt(1/3)).astype(np.uint8))
         cv2.waitKey(10)
+'''
