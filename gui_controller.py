@@ -12,6 +12,7 @@ import numpy as np
 from motor_camera import *
 import cv2
 from bkgThresh import *
+from PIL import Image
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -31,6 +32,7 @@ class GuiController(object):
         parent.bind_all("<1>", lambda event:event.widget.focus_set())
         self.bind_intro_text()
         self.bind_q_start()
+        self.bind_capture_bg()
         self.bind_adv_option()
         self.bind_motor_adv_option()
         self.bind_motor_test_spin()
@@ -72,6 +74,13 @@ class GuiController(object):
         self.view.q_start_button.bind("<Leave>",
             lambda e: self.view.q_start_button.configure(bg = BUTTON_COLOR))
         self.view.q_start_button.bind("<ButtonRelease-1>", self.run_system)
+    
+    def bind_capture_bg(self):
+        self.view.capture_bg_button.bind("<Enter>",
+            lambda e: self.view.capture_bg_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.capture_bg_button.bind("<Leave>",
+            lambda e: self.view.capture_bg_button.configure(bg = BUTTON_COLOR))
+        self.view.capture_bg_button.bind("<ButtonRelease-1>", lambda e: print("nothing"))
 
     def bind_adv_option(self):
         self.view.adv_option.bind("<Enter>",
@@ -122,7 +131,6 @@ class GuiController(object):
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(event,rgb_output_path=PREVIEW_DIR_PATH,img_ind=0))
 
-
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
             lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_FOCUS_COLOR))
@@ -137,6 +145,20 @@ class GuiController(object):
         self.view.settings_panel.settings_cancel_button.bind("<Leave>",
             lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_COLOR))
         self.view.settings_panel.settings_cancel_button.bind("<ButtonRelease-1>", self.cancel_settings)
+
+    def is_crop_error(self, crop_top, crop_left, crop_bottom, crop_right, im):
+        width, height = im.size
+        if (crop_top < 0 or crop_top > height):
+            return True
+        if (crop_bottom < 0 or crop_bottom > height):
+            return True
+        if (crop_left < 0 or crop_left > width):
+            return True
+        if (crop_right < 0 or crop_right > width):
+            return True
+        if (crop_left > crop_right or crop_top > crop_bottom):
+            return True
+        return False
 
     def img_thres(self, event, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
@@ -164,18 +186,40 @@ class GuiController(object):
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
+        crop_left = int(self.view.settings_panel.param_xmin_entry.get())
+        crop_right = int(self.view.settings_panel.param_xmax_entry.get())
+        crop_top = int(self.view.settings_panel.param_ymin_entry.get())
+        crop_bottom = int(self.view.settings_panel.param_ymax_entry.get())
+
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
+            im = Image.open(rgb_output_path + f[0])
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
+                im2.save(rgb_output_path + f[0])
+            else:
+                print("crop dimension error! showing original image")
         if depth_output_path is not None:
             cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
+            im = Image.open(depth_output_path + f[0])
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
+                im2.save(depth_output_path + f[0])
+            else:
+                print("crop dimension error! showing original image")
         self.view.settings_panel.refresh_preview()
         print("done!")
 
     '''Main logic execution'''
     def run_system(self, event):
-        print("3D scanning system start with default settings")
+        print("3D scanning system start")
         self.view.manage_settings(self.parent, False)
         self.model.run_motor_camera()
+
+    def run_capture_bg(self, event):
+        print("3D scanning system start: capture bg")
+        self.view.manage_settings(self.parent, False)
+        pass
 
     '''export settings file to a disk location'''
     def export_settings(self):
