@@ -45,6 +45,7 @@ class GuiController(object):
         self.bind_settings_cancel()
         self.bind_thres_adv_option()
         self.bind_preview_thres()
+        self.bind_thres_adv_frame()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -68,6 +69,10 @@ class GuiController(object):
 
         window.config(menu=self.menubar)
 
+    def bind_thres_adv_frame(self):
+        self.view.settings_panel.thres_adv_frame.bind("<FocusOut>", lambda e: self.view.settings_panel.forget_thres_adv())
+        self.view.settings_panel.close_thres_button.bind("<ButtonRelease-1>", lambda e: self.view.settings_panel.forget_thres_adv())
+
     def bind_intro_text(self):
         self.view.intro_text.bind("<Configure>", self.scale_font)
 
@@ -83,7 +88,7 @@ class GuiController(object):
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.capture_bg_button.bind("<Leave>",
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_COLOR))
-        self.view.capture_bg_button.bind("<ButtonRelease-1>", lambda e: print("nothing"))
+        self.view.capture_bg_button.bind("<ButtonRelease-1>", self.run_capture_bg)
 
     def bind_adv_option(self):
         self.view.adv_option.bind("<Enter>",
@@ -125,7 +130,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.thres_adv_font.configure(underline = True))
         self.view.settings_panel.thres_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.thres_adv_font.configure(underline = False))
-        self.view.settings_panel.thres_adv.bind("<ButtonRelease-1>", lambda : None)
+        self.view.settings_panel.thres_adv.bind("<ButtonRelease-1>", lambda e : self.view.settings_panel.open_thres_adv())
 
     def bind_preview_thres(self):
         self.view.settings_panel.prev_thres_button.bind("<Enter>",
@@ -175,8 +180,8 @@ class GuiController(object):
                 return 
         print("Processing image " + str(img_ind))
         # temp, will pull from advanced settings panel later
-        depth_thresh = 30
-        rgb_thresh = 50
+        depth_thresh = int(self.view.settings_panel.param_depth_dist.get())
+        rgb_thresh = int(self.view.settings_panel.param_color_dist.get())
 
         img_names = [os.listdir(img_path), os.listdir(depth_path)]
         f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
@@ -278,6 +283,12 @@ class GuiController(object):
         self.view.settings_panel.param_ymax_entry.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_ymax_entry.insert(0, data["ymax_bottom"])
 
+        self.view.settings_panel.param_color_dist.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_color_dist.insert(0, data["color_dist"])
+        self.view.settings_panel.param_depth_dist.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_depth_dist.insert(0, data["depth_dist"])
+        self.view.settings_panel.hue_weight_slider.set(data["hue_weight"])
+
     '''Open settings panel'''
     def run_settings(self, event, action=None):
         if (os.path.exists(self.settings_path)):
@@ -301,7 +312,9 @@ class GuiController(object):
         macrostep_time = (360/200)/w_max + tr + delay + DELAY_TOL
         macrosteps=200
 
-
+        color_dist = self.view.settings_panel.param_color_dist.get()
+        depth_dist = self.view.settings_panel.param_depth_dist.get()
+        hue_weight = self.view.settings_panel.hue_weight_slider.get()
         
         np.savez(self.settings_path,
                     speed=speed,
@@ -314,7 +327,10 @@ class GuiController(object):
                     macrostep_time=macrostep_time,
                     baud=baud,
                     com=com,
-                    macrosteps=macrosteps
+                    macrosteps=macrosteps,
+                    color_dist=color_dist,
+                    depth_dist=depth_dist,
+                    hue_weight=hue_weight
                 )
         self.view.manage_settings(self.parent, False)
         # run system
