@@ -120,7 +120,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(event,rgb_path=PREVIEW_DIR_PATH))
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(event,rgb_output_path=PREVIEW_DIR_PATH,img_ind=0))
 
 
     def bind_settings_apply(self):
@@ -138,7 +138,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_COLOR))
         self.view.settings_panel.settings_cancel_button.bind("<ButtonRelease-1>", self.cancel_settings)
 
-    def img_thres(self, event, rgb_path=None, depth_path=None, img_ind=0):
+    def img_thres(self, event, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
         img_path = 'data/color/'
         depth_path = 'data/depth/'
@@ -148,29 +148,28 @@ class GuiController(object):
         for dir in dirs:
             if (len(os.listdir(dir)) == 0): # exit when empty folder found
                 return 
-        print("Processing preview")
+        print("Processing image " + str(img_ind))
         # temp, will pull from advanced settings panel later
         depth_thresh = 30
         rgb_thresh = 50
 
         img_names = [os.listdir(img_path), os.listdir(depth_path)]
-        f = [img_names[0][img_ind],img_names[1][img_ind]]
+        f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
         img = cv2.imread(img_path + f[0])
         rgb_dist = getBkgDistRGB(img,cv2.imread(bkg_path + f[0]))
         depth = cv2.imread(depth_path + f[1])
         depth_dist = getBkgDistDepth(depth,cv2.imread(depth_bkg_path + f[1]))
         bkg_thresh_rgb = removeBkg(img,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
         bkg_thresh_depth = removeBkg(depth,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
-
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
-
-        if rgb_path is not None:
-            cv2.imwrite(rgb_path + f[0], bkg_thresh_rgb)
-        if depth_path is not None:
-            cv2.imwrite(depth_path + f[0], bkg_thresh_depth)
+        if rgb_output_path is not None:
+            cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
+        if depth_output_path is not None:
+            cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
         self.view.settings_panel.refresh_preview()
+        print("done!")
 
     '''Main logic execution'''
     def run_system(self, event):
