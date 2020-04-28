@@ -143,10 +143,6 @@ class GuiController(object):
 
     def preview_thres(self, event):
         curr_dirname = os.path.dirname(__file__)
-        # img_path = curr_dirname / Path("data/color")
-        # depth_path = curr_dirname / Path("data/depth")
-        # bkg_path = curr_dirname / Path("data/color_bkg")
-        # depth_bkg_path = curr_dirname / Path("data/depth_bkg")
         img_path = 'data/color/'
         depth_path = 'data/depth/'
         bkg_path = 'data/color_bkg/'
@@ -165,13 +161,9 @@ class GuiController(object):
         rgb_dist = getBkgDistRGB(img,cv2.imread(bkg_path + f[0]))
         depth = cv2.imread(depth_path + f[1])
         depth_dist = getBkgDistDepth(depth,cv2.imread(depth_bkg_path + f[1]))
-        # cv2.imshow(' ',(rgb_dist*np.sqrt(1/3)).astype(np.uint8))
         bkg_thresh_rgb = removeBkg(img,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
         bkg_thresh_depth = removeBkg(depth,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
-        # cv2.imshow('',bkg_thresh_rgb)
         cv2.imwrite(PREVIEW_DIR_PATH + f[0], bkg_thresh_rgb)
-        # cv2.imwrite('data/thresholded/' + f[1], bkg_thresh_depth)
-        # cv2.imwrite('data/pretty/' + f[0],(rgb_dist*np.sqrt(1/3)).astype(np.uint8))
         self.view.settings_panel.refresh_preview()
 
 
