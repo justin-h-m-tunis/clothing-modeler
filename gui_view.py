@@ -21,6 +21,12 @@ class GuiView(object):
         self.setup_layout()
         self.settings_panel = gui_view_settings.GuiViewSettings(parent)
 
+    def create_capture_bg(self):
+        self.capture_bg_button = tk.Button(self.left_frame, text="Capture BG", 
+            fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+
     def create_quick_start(self):
         self.q_start_button = tk.Button(self.left_frame, text="Quick Start", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
@@ -93,13 +99,15 @@ class GuiView(object):
         self.create_quick_start()
         self.create_adv_options()
         self.create_progress_bar()
+        self.create_capture_bg()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
         self.right_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
-        self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.7)
+        self.capture_bg_button.place(anchor="center", relx=0.5, rely=0.8)
         self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
         self.progress.place(anchor="center", relx=0.5, rely=0.87)
 
