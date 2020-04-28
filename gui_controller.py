@@ -6,7 +6,8 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
 import open3d as o3d
-import multiprocessing, time
+import multiprocessing, time, os, shutil
+import numpy as np
 from motor_camera import *
 
 class GuiController(object):
@@ -17,6 +18,7 @@ class GuiController(object):
         self.init_menu()
         self.init_view(parent)
         self.parent = parent
+        self.settings_path = "./settings.npz"
 
     def init_model(self):
         self.model = gui_model.GuiModel(updateFn=lambda n: self.update_progress(n,200),total_macrosteps=200)
@@ -39,9 +41,10 @@ class GuiController(object):
     def init_menu(self):
         self.menubar = tk.Menu(window)
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.file_menu.add_command(label="Import...", command=lambda : None)
-        self.file_menu.add_command(label="Export...", command=lambda : None)
-        # self.file_menu.add_command(label="Save", command=lambda : None)
+
+        self.file_menu.add_command(label="Import...", command=self.import_settings)
+        self.file_menu.add_command(label="Export...", command=self.export_settings)
+        # self.file_menu.add_command(label="Save", command=self.do_nothing)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=on_closing)
         self.menubar.add_cascade(label="File", menu=self.file_menu)
@@ -121,7 +124,8 @@ class GuiController(object):
             lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.settings_apply_button.bind("<Leave>",
             lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.settings_apply_button.bind("<ButtonRelease-1>", lambda : None)
+
+        self.view.settings_panel.settings_apply_button.bind("<ButtonRelease-1>", self.save_settings)
 
     def bind_settings_cancel(self):
         self.view.settings_panel.settings_cancel_button.bind("<Enter>",
@@ -133,12 +137,65 @@ class GuiController(object):
     '''Main logic execution'''
     def run_system(self, event):
         print("3D scanning system start with default settings")
-        self.view.process_settings(self.parent)
+        self.view.manage_settings(self.parent, False)
         self.model.run_motor_camera()
 
-    '''Place holder for advanced options'''
-    def run_settings(self, event):
-        self.view.manage_settings(self.parent)
+    '''export settings file to a disk location'''
+    def export_settings(self):
+        path_name = filedialog.askdirectory(initialdir = "/", title = "Select save directory")
+        print(path_name)
+        if (path_name == ""):
+            return
+        else:
+            shutil.copy2(self.settings_path, path_name)
+
+    '''import settings from npz file'''
+    def import_settings(self):
+        path_name = filedialog.askopenfilename(initialdir = "/", title = "Select settings file", filetypes = (("npz files","*.npz"),))
+        print(path_name)
+        if (path_name == ""):
+            return
+        else:
+            self.settings_path = path_name
+            self.run_settings("<1>", True)  
+
+    '''load settings from a given npz file'''
+    def load_settings(self, path_name):
+        data = np.load(path_name)
+        self.view.settings_panel.param_speed_slider.set(data["speed"])
+        self.view.settings_panel.param_distance_entry.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_distance_entry.insert(0, data["distance"])
+        self.view.settings_panel.param_thres_slider.set(data["sensitivity"])
+        self.view.settings_panel.param_xmin_entry.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_xmin_entry.insert(0, data["xmin_left"])
+        self.view.settings_panel.param_xmax_entry.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_xmax_entry.insert(0, data["xmax_right"])
+        self.view.settings_panel.param_ymin_entry.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_ymin_entry.insert(0, data["ymin_top"])
+        self.view.settings_panel.param_ymax_entry.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_ymax_entry.insert(0, data["ymax_bottom"])
+
+    '''Open settings panel'''
+    def run_settings(self, event, action=None):
+        if (os.path.exists(self.settings_path)):
+            self.load_settings(self.settings_path)
+        self.view.manage_settings(self.parent, action)
+
+    '''Save params to npz file on disk'''
+    def save_settings(self, event):
+        speed = self.view.settings_panel.param_speed_slider.get()
+        distance = self.view.settings_panel.param_distance_entry.get()
+        sensitivity = self.view.settings_panel.param_thres_slider.get()
+        xmin_left = self.view.settings_panel.param_xmin_entry.get()
+        xmax_right = self.view.settings_panel.param_xmax_entry.get()
+        ymin_top = self.view.settings_panel.param_ymin_entry.get()
+        ymax_bottom = self.view.settings_panel.param_ymax_entry.get()
+        
+        np.savez(self.settings_path, speed=speed, distance=distance,
+            sensitivity=sensitivity, xmin_left=xmin_left, xmax_right=xmax_right,
+            ymin_top=ymin_top, ymax_bottom=ymax_bottom)
+        # run system
+        self.run_system(event)
 
     def cancel_settings(self, event):
         self.view.manage_settings(self.parent)
