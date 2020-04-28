@@ -81,8 +81,10 @@ class GuiView(object):
         self.settings_open = True 
 
     def create_widgets(self):    
-        self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
-        self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR)
+        self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR,
+            highlightthickness=0)
+        self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR,
+            highlightthickness=0)
         self.create_app_name()
         self.create_logo()
         # self.q_start_button = tk.Button(self.left_frame, text="Quick Start",

@@ -33,6 +33,8 @@ class GuiController(object):
         self.bind_camera_test_picture()
         self.bind_settings_apply()
         self.bind_settings_cancel()
+        self.bind_thres_adv_option()
+        self.bind_preview_thres()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -99,6 +101,20 @@ class GuiController(object):
         self.view.settings_panel.test_picture_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_COLOR))
         self.view.settings_panel.test_picture_button.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_thres_adv_option(self):
+        self.view.settings_panel.thres_adv.bind("<Enter>",
+            lambda e: self.view.settings_panel.thres_adv_font.configure(underline = True))
+        self.view.settings_panel.thres_adv.bind("<Leave>",
+            lambda e: self.view.settings_panel.thres_adv_font.configure(underline = False))
+        self.view.settings_panel.thres_adv.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_preview_thres(self):
+        self.view.settings_panel.prev_thres_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.prev_thres_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", self.do_nothing)
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
