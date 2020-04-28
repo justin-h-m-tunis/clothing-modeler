@@ -19,13 +19,15 @@ class GuiController(object):
 
     def __init__(self, parent):
         self.init_menu()
+        self.settings_path = "./settings.npz"
+        try:
+            self.init_model(settings=np.load(self.settings_path))
+        except IOError:
+            self.init_model(settings=None)
         self.init_view(parent)
         self.parent = parent
-        self.settings_path = "./settings.npz"
-        self.init_model()
 
-
-    def init_model(self, settings=None, onSerialFail=print("Motor not found!")):
+    def init_model(self, settings=None, onSerialFail=lambda: print("Motor not found!")):
         self.model = gui_model.GuiModel(updateFn=lambda n: self.update_progress(n,200),settings=settings, onSerialFail=onSerialFail)
 
     def init_view(self, parent):
@@ -74,7 +76,7 @@ class GuiController(object):
             lambda e: self.view.q_start_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.q_start_button.bind("<Leave>",
             lambda e: self.view.q_start_button.configure(bg = BUTTON_COLOR))
-        self.view.q_start_button.bind("<ButtonRelease-1>", self.run_system)
+        self.view.q_start_button.bind("<ButtonRelease-1>", lambda event: self.run_system())
     
     def bind_capture_bg(self):
         self.view.capture_bg_button.bind("<Enter>",
@@ -102,7 +104,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.test_spin_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", self.model.run_motor_camera(img_path='data/bkg'))
+        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda event : self.model.run_motor_camera(img_path='data/bkg'))
 
     def bind_camera_adv_option(self):
         self.view.settings_panel.camera_adv.bind("<Enter>",
@@ -130,7 +132,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(event,rgb_output_path=PREVIEW_DIR_PATH,img_ind=0))
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(rgb_output_path=PREVIEW_DIR_PATH,img_ind=0))
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
@@ -161,7 +163,7 @@ class GuiController(object):
             return True
         return False
 
-    def img_thres(self, event, rgb_output_path=None, depth_output_path=None, img_ind=0):
+    def img_thres(self, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
         img_path = 'data/color/'
         depth_path = 'data/depth/'
@@ -213,7 +215,7 @@ class GuiController(object):
         print("done!")
 
     '''Main logic execution'''
-    def run_system(self, event, img_path='data', get_images=True, Threshold_images=True,Stitch_images=True):
+    def run_system(self, img_path='data', get_images=True, Threshold_images=True,Stitch_images=True):
         print("3D scanning system start with default settings")
         self.view.manage_settings(self.parent, False)
         settings = np.load(self.settings_path)
@@ -228,9 +230,10 @@ class GuiController(object):
                 self.model.run_motor_camera(img_path=img_path, settings=settings, onSerialFail=raise_serial_exception())
             except Exception as E:
                 print(E)
+                return
         if Threshold_images:
             for i in range(settings['macrosteps']):
-                img_thresh(rgb_output_path='data/color',depth_output_path='data/depth',img_ind=i)
+                self.img_thres(rgb_output_path='data/color',depth_output_path='data/depth',img_ind=i)
         if Stitch_images:
             pass
 
@@ -290,10 +293,29 @@ class GuiController(object):
         xmax_right = self.view.settings_panel.param_xmax_entry.get()
         ymin_top = self.view.settings_panel.param_ymin_entry.get()
         ymax_bottom = self.view.settings_panel.param_ymax_entry.get()
+        baud = 9600
+        com = 'COM3'
+        w_max = speed*(MAXIMUM_OMEGA - MINIMUM_OMEGA) + MINIMUM_OMEGA
+        tr = speed*(MAXIMUM_TR- MINIMUM_TR) + MINIMUM_TR
+        delay = speed*(MAXIMUM_DELAY - MINIMUM_DELAY) + MINIMUM_DELAY
+        macrostep_time = (360/200)/w_max + tr + delay + DELAY_TOL
+        macrosteps=200
+
+
         
-        np.savez(self.settings_path, speed=speed, distance=distance,
-            sensitivity=sensitivity, xmin_left=xmin_left, xmax_right=xmax_right,
-            ymin_top=ymin_top, ymax_bottom=ymax_bottom)
+        np.savez(self.settings_path,
+                    speed=speed,
+                    distance=distance,
+                    sensitivity=sensitivity,
+                    xmin_left=xmin_left,
+                    xmax_right=xmax_right,
+                    ymin_top=ymin_top,
+                    ymax_bottom=ymax_bottom,
+                    macrostep_time=macrostep_time,
+                    baud=baud,
+                    com=com,
+                    macrosteps=macrosteps
+                )
         self.view.manage_settings(self.parent, False)
         # run system
         # self.run_system(event)
