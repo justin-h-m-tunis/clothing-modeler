@@ -188,7 +188,7 @@ class GuiViewSettings(object):
         self.thres_preview_frame = tk.Frame(self.settings_frame, bg="white",
             highlightthickness=0)
         self.settings_action_frame = tk.Frame(self.settings_frame, bg="white",
-            highlightthickness=2)
+            highlightthickness=2, highlightcolor=FRAME_BORDER_COLOR)
         self.create_title()
         self.create_motor_title()
         self.create_camera_title()

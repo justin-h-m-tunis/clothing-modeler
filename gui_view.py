@@ -65,12 +65,12 @@ class GuiView(object):
         self.progress_var.set(int(curr_step / max_step * 100))
         self.progress.update()
 
-    def manage_settings(self, parent):
-        if (self.settings_open): # open settings panel
+    def manage_settings(self, parent, action=None):
+        if (action == True or self.settings_open): # open settings panel
             print("Settings panel open")
             self.settings_panel.setup_layout()
             self.settings_open = False
-        else:
+        elif (action == False or not self.settings_open):
             print("Settings panel close")
             self.settings_panel.forget_layout()
             self.settings_open = True
