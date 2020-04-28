@@ -26,6 +26,10 @@ class GuiController(object):
         self.bind_intro_text()
         self.bind_q_start()
         self.bind_adv_option()
+        self.bind_motor_adv_option()
+        self.bind_motor_test_spin()
+        self.bind_camera_adv_option()
+        self.bind_camera_test_picture()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -65,18 +69,48 @@ class GuiController(object):
             lambda e: self.view.opt_font.configure(underline = False))
         self.view.adv_option.bind("<ButtonRelease-1>", self.run_adv_option)
 
+    def bind_motor_adv_option(self):
+        self.view.settings_panel.motor_adv.bind("<Enter>",
+            lambda e: self.view.settings_panel.motor_adv_font.configure(underline = True))
+        self.view.settings_panel.motor_adv.bind("<Leave>",
+            lambda e: self.view.settings_panel.motor_adv_font.configure(underline = False))
+        self.view.settings_panel.motor_adv.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_motor_test_spin(self):
+        self.view.settings_panel.test_spin_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.test_spin_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_COLOR))
+        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_camera_adv_option(self):
+        self.view.settings_panel.camera_adv.bind("<Enter>",
+            lambda e: self.view.settings_panel.camera_adv_font.configure(underline = True))
+        self.view.settings_panel.camera_adv.bind("<Leave>",
+            lambda e: self.view.settings_panel.camera_adv_font.configure(underline = False))
+        self.view.settings_panel.camera_adv.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_camera_test_picture(self):
+        self.view.settings_panel.test_picture_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.test_picture_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_COLOR))
+        self.view.settings_panel.test_picture_button.bind("<ButtonRelease-1>", self.do_nothing)
+
+
     '''Actions on key binding'''
-    def do_nothing(self):
+    def do_nothing(self, event):
+        print("i'm doing nothing")
         pass
 
     '''Main logic execution'''
     def run_system(self, event):
         print("3D scanning system start with default settings")
+        self.view.process_settings(self.parent)
         self.model.run_motor_camera()
 
     '''Place holder for advanced options'''
     def run_adv_option(self, event):
-        print("Opening settings panel")
         self.view.manage_settings(self.parent)
 
     def scale_font(self, event):

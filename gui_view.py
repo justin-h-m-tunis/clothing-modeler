@@ -29,7 +29,7 @@ class GuiView(object):
 
     def create_adv_options(self):
         self.adv_option = tk.Label(self.left_frame, text="Settings", fg="white",
-            bg=WIN_BG_COLOR, font="Ubuntu 10")
+            bg=WIN_BG_COLOR, font="Ubuntu 10", cursor="hand2")
         self.opt_font = font.Font(self.adv_option, self.adv_option.cget("font"))
         self.adv_option.configure(font=self.opt_font)
 
@@ -67,13 +67,18 @@ class GuiView(object):
 
     def manage_settings(self, parent):
         if (self.settings_open): # open settings panel
+            print("Settings panel open")
             self.settings_panel.setup_layout()
             self.settings_open = False
         else:
+            print("Settings panel close")
             self.settings_panel.forget_layout()
             self.settings_open = True
-            
 
+    def process_settings(self, parent):
+        print("Settings panel close")
+        self.settings_panel.forget_layout()
+        self.settings_open = True 
 
     def create_widgets(self):    
         self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
