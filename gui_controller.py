@@ -23,6 +23,7 @@ class GuiController(object):
 
     def init_view(self, parent):
         self.view = gui_view.GuiView(parent)
+        parent.bind_all("<1>", lambda event:event.widget.focus_set())
         self.bind_intro_text()
         self.bind_q_start()
         self.bind_adv_option()
@@ -30,6 +31,8 @@ class GuiController(object):
         self.bind_motor_test_spin()
         self.bind_camera_adv_option()
         self.bind_camera_test_picture()
+        self.bind_settings_apply()
+        self.bind_settings_cancel()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -67,7 +70,7 @@ class GuiController(object):
             lambda e: self.view.opt_font.configure(underline = True))
         self.view.adv_option.bind("<Leave>",
             lambda e: self.view.opt_font.configure(underline = False))
-        self.view.adv_option.bind("<ButtonRelease-1>", self.run_adv_option)
+        self.view.adv_option.bind("<ButtonRelease-1>", self.run_settings)
 
     def bind_motor_adv_option(self):
         self.view.settings_panel.motor_adv.bind("<Enter>",
@@ -97,6 +100,20 @@ class GuiController(object):
             lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_COLOR))
         self.view.settings_panel.test_picture_button.bind("<ButtonRelease-1>", self.do_nothing)
 
+    def bind_settings_apply(self):
+        self.view.settings_panel.settings_apply_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.settings_apply_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_COLOR))
+        self.view.settings_panel.settings_apply_button.bind("<ButtonRelease-1>", self.do_nothing)
+
+    def bind_settings_cancel(self):
+        self.view.settings_panel.settings_cancel_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.settings_cancel_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_COLOR))
+        self.view.settings_panel.settings_cancel_button.bind("<ButtonRelease-1>", self.cancel_settings)
+
 
     '''Actions on key binding'''
     def do_nothing(self, event):
@@ -110,7 +127,10 @@ class GuiController(object):
         self.model.run_motor_camera()
 
     '''Place holder for advanced options'''
-    def run_adv_option(self, event):
+    def run_settings(self, event):
+        self.view.manage_settings(self.parent)
+
+    def cancel_settings(self, event):
         self.view.manage_settings(self.parent)
 
     def scale_font(self, event):
