@@ -3,7 +3,6 @@ import open3d as o3d
 import serial
 from motor_camera.Motor import *
 from motor_camera.Camera import *
-# from call_back import *
 
 
 class GuiModel(object):
