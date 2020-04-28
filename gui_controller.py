@@ -172,9 +172,14 @@ class GuiController(object):
 
     '''Main logic execution'''
     def run_system(self, event):
-        print("3D scanning system start with default settings")
+        print("3D scanning system start")
         self.view.manage_settings(self.parent, False)
         self.model.run_motor_camera()
+
+    def run_capture_bg(self, event):
+        print("3D scanning system start: capture bg")
+        self.view.manage_settings(self.parent, False)
+        pass
 
     '''export settings file to a disk location'''
     def export_settings(self):
