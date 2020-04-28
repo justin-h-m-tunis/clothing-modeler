@@ -1,7 +1,7 @@
 from gui_config import *
 from tkinter import DoubleVar, font, ttk
 import tkinter as tk
-import gui_controller
+import gui_controller, gui_view_settings
 from PIL import ImageTk, Image
 from pathlib import Path
 import os, random
@@ -16,8 +16,16 @@ class GuiView(object):
         self.window_width = self.window.winfo_width()
         self.window_height = self.window.winfo_height()
         self.progress = None
+        self.settings_open = True
         self.create_widgets()
         self.setup_layout()
+        self.settings_panel = gui_view_settings.GuiViewSettings(parent)
+
+    def create_capture_bg(self):
+        self.capture_bg_button = tk.Button(self.left_frame, text="Capture BG", 
+            fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
 
     def create_quick_start(self):
         self.q_start_button = tk.Button(self.left_frame, text="Quick Start", 
@@ -26,8 +34,8 @@ class GuiView(object):
             activeforeground="white")
 
     def create_adv_options(self):
-        self.adv_option = tk.Label(self.left_frame, text="Advanced", fg="white",
-            bg=WIN_BG_COLOR, font="Ubuntu 10")
+        self.adv_option = tk.Label(self.left_frame, text="Settings", fg="white",
+            bg=WIN_BG_COLOR, font="Ubuntu 10", cursor="hand2")
         self.opt_font = font.Font(self.adv_option, self.adv_option.cget("font"))
         self.adv_option.configure(font=self.opt_font)
 
@@ -63,9 +71,26 @@ class GuiView(object):
         self.progress_var.set(int(curr_step / max_step * 100))
         self.progress.update()
 
+    def manage_settings(self, parent, action=None):
+        if (action == True or (self.settings_open and action == None)): # open settings panel
+            print("Settings panel open")
+            self.settings_panel.setup_layout()
+            self.settings_open = False
+        elif (action == False or (not self.settings_open and action == None)):
+            print("Settings panel close")
+            self.settings_panel.forget_layout()
+            self.settings_open = True
+
+    def process_settings(self, parent):
+        print("Settings panel close")
+        self.settings_panel.forget_layout()
+        self.settings_open = True 
+
     def create_widgets(self):    
-        self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR)
-        self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR)
+        self.left_frame = tk.Frame(self.window, bg=LEFT_FRAME_COLOR,
+            highlightthickness=0)
+        self.right_frame = tk.Frame(self.window, bg=RIGHT_FRAME_COLOR,
+            highlightthickness=0)
         self.create_app_name()
         self.create_logo()
         # self.q_start_button = tk.Button(self.left_frame, text="Quick Start",
@@ -74,13 +99,15 @@ class GuiView(object):
         self.create_quick_start()
         self.create_adv_options()
         self.create_progress_bar()
+        self.create_capture_bg()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
         self.right_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
-        self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.7)
+        self.capture_bg_button.place(anchor="center", relx=0.5, rely=0.8)
         self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
         self.progress.place(anchor="center", relx=0.5, rely=0.87)
 
