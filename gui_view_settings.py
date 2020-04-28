@@ -20,6 +20,7 @@ class GuiViewSettings(object):
         self.config_thres_frame_row_col()
         self.config_setting_action_frame_row_col()
         self.config_thres_preview_frame_row_col()
+        self.config_thres_adv_frame_row_col()
 
     def create_title(self):
         self.title_text = tk.Label(self.settings_title_frame, bg="white", fg=WIN_BG_COLOR,
@@ -54,13 +55,6 @@ class GuiViewSettings(object):
             label="Speed", from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 12")
         self.param_speed_slider.set(0.5)
         return self.param_speed_slider
-        # style = ttk.Style()
-        # style.theme_use('clam')
-        # style.configure('my.Horizontal.TScale', sliderlength=50, background='#FFFFFF',
-        #                 foreground=WIN_BG_COLOR)
-        # self.param_speed_slider = TickScale(self.motor_frame, orient='horizontal', style='my.Horizontal.TScale',
-        #     tickinterval=0.2, from_=0, to=1, showvalue=True, digits=2,
-        #     length=100, labelpos='e')
 
     def create_motor_adv(self):
         self.motor_adv = tk.Label(self.motor_frame, text="Advanced", fg=WIN_BG_COLOR,
@@ -207,6 +201,47 @@ class GuiViewSettings(object):
             activeforeground="white")
         return self.prev_thres_button
 
+    '''Threashold advanced frame implementations'''
+    
+    def create_hue_weight_label(self):
+        self.hue_weight_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Hue Weight")
+        return self.hue_weight_label
+
+    def create_hue_weight_slider(self):
+        self.hue_weight_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
+            orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
+            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+        self.hue_weight_slider.set(0.5)
+        return self.hue_weight_slider
+
+    def create_color_dist_label(self):
+        self.color_dist_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Color Dist")
+        return self.color_dist_label
+
+    def create_depth_dist_label(self):
+        self.depth_dist_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Depth Dist")
+        return self.depth_dist_label
+
+    def create_color_dist_entry(self):
+        self.param_color_dist = tk.Entry(self.thres_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_color_dist
+
+    def create_depth_dist_entry(self):
+        self.param_depth_dist = tk.Entry(self.thres_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_depth_dist
+
+    def create_close_thres_button(self):
+        self.close_thres_button = tk.Button(self.thres_adv_frame, text="Close", 
+            fg=WIN_BG_COLOR, bg=CANCEL_BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=CANCEL_BUTTON_FOCUS_COLOR,
+            activeforeground=WIN_BG_COLOR)
+        return self.close_thres_button
+
 
     '''Create and setup'''
 
@@ -223,6 +258,14 @@ class GuiViewSettings(object):
         self.thres_preview_frame = tk.Frame(self.settings_frame, bg="white",
             highlightthickness=0)
         self.settings_action_frame = tk.Frame(self.settings_frame, bg="white",
+            highlightthickness=2, highlightcolor=FRAME_BORDER_COLOR)
+        
+        # create advanced settings frame
+        self.thres_adv_frame = tk.Frame(self.window, bg="white",
+            highlightthickness=2, highlightcolor=FRAME_BORDER_COLOR)
+        self.camera_adv_frame = tk.Frame(self.window, bg="white",
+            highlightthickness=2, highlightcolor=FRAME_BORDER_COLOR)
+        self.motor_adv_frame = tk.Frame(self.window, bg="white",
             highlightthickness=2, highlightcolor=FRAME_BORDER_COLOR)
         self.create_title()
         self.create_motor_title()
@@ -259,6 +302,18 @@ class GuiViewSettings(object):
                                 self.create_thres_adv(),
                                 self.create_preview_thres_button(),
                                 ]
+
+        # create thres adv frame widgets
+        self.thres_adv_widgets =    [
+                                    self.create_hue_weight_label(),
+                                    self.create_color_dist_label(),
+                                    self.create_depth_dist_label(),
+                                    self.create_color_dist_entry(),
+                                    self.create_depth_dist_entry(),
+                                    self.create_close_thres_button(),
+                                    self.create_hue_weight_slider(),
+                                    ]
+        
     def setup_layout(self):
         # setup frames
         self.settings_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)
@@ -302,6 +357,14 @@ class GuiViewSettings(object):
         self.prev_thres_button.grid(row=4, column=2, columnspan=2, padx=10, pady=0, ipady=0, sticky="")
         self.thres_adv.grid(row=4, column=0, columnspan=2, padx=10, pady=0, ipady=0, sticky="")
 
+        # setup widgets in thres adv frame
+        self.hue_weight_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.color_dist_label.grid(row=1, column=0, columnspan=2, sticky="e")
+        self.depth_dist_label.grid(row=2, column=0, columnspan=2, sticky="e")
+        self.param_color_dist.grid(row=1, column=2, columnspan=2, sticky="")
+        self.param_depth_dist.grid(row=2, column=2, columnspan=2, sticky="")
+        self.close_thres_button.grid(row=3, column=2, columnspan=2, sticky="se", padx=20, pady=20)
+        self.hue_weight_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
 
     def config_setting_frame_row_col(self):
         self.settings_frame.grid_columnconfigure(0, weight=1)
@@ -356,6 +419,23 @@ class GuiViewSettings(object):
         self.thres_preview_frame.grid_columnconfigure(0, weight=1)
         self.thres_preview_frame.grid_rowconfigure(0, weight=1)
 
+    def config_thres_adv_frame_row_col(self):
+        self.thres_adv_frame.grid_columnconfigure(0, weight=1)
+        self.thres_adv_frame.grid_columnconfigure(1, weight=1)
+        self.thres_adv_frame.grid_columnconfigure(2, weight=1)
+        self.thres_adv_frame.grid_columnconfigure(3, weight=1)
+        self.thres_adv_frame.grid_rowconfigure(0, weight=10)
+        self.thres_adv_frame.grid_rowconfigure(1, weight=10)
+        self.thres_adv_frame.grid_rowconfigure(2, weight=10)
+        self.thres_adv_frame.grid_rowconfigure(3, weight=10)
+
     def forget_layout(self):
         self.settings_frame.place_forget()
+
+    def open_thres_adv(self):
+        self.thres_adv_frame.place(anchor="center", rely=0.5, relx=0.5, relheight=0.5, relwidth=0.5)
+        self.thres_adv_frame.focus_set()
+
+    def forget_thres_adv(self):
+        self.thres_adv_frame.place_forget()
 
