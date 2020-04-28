@@ -31,6 +31,7 @@ class GuiController(object):
         parent.bind_all("<1>", lambda event:event.widget.focus_set())
         self.bind_intro_text()
         self.bind_q_start()
+        self.bind_capture_bg()
         self.bind_adv_option()
         self.bind_motor_adv_option()
         self.bind_motor_test_spin()
@@ -72,6 +73,13 @@ class GuiController(object):
         self.view.q_start_button.bind("<Leave>",
             lambda e: self.view.q_start_button.configure(bg = BUTTON_COLOR))
         self.view.q_start_button.bind("<ButtonRelease-1>", self.run_system)
+    
+    def bind_capture_bg(self):
+        self.view.capture_bg_button.bind("<Enter>",
+            lambda e: self.view.capture_bg_button.configure(bg = BUTTON_FOCUS_COLOR))
+        self.view.capture_bg_button.bind("<Leave>",
+            lambda e: self.view.capture_bg_button.configure(bg = BUTTON_COLOR))
+        self.view.capture_bg_button.bind("<ButtonRelease-1>", lambda e: print("nothing"))
 
     def bind_adv_option(self):
         self.view.adv_option.bind("<Enter>",
@@ -121,7 +129,6 @@ class GuiController(object):
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", self.preview_thres)
-
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
