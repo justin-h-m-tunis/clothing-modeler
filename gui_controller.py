@@ -146,6 +146,20 @@ class GuiController(object):
             lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_COLOR))
         self.view.settings_panel.settings_cancel_button.bind("<ButtonRelease-1>", self.cancel_settings)
 
+    def is_crop_error(self, crop_top, crop_left, crop_bottom, crop_right, im):
+        width, height = im.size
+        if (crop_top < 0 or crop_top > height):
+            return True
+        if (crop_bottom < 0 or crop_bottom > height):
+            return True
+        if (crop_left < 0 or crop_left > width):
+            return True
+        if (crop_right < 0 or crop_right > width):
+            return True
+        if (crop_left > crop_right or crop_top > crop_bottom):
+            return True
+        return False
+
     def img_thres(self, event, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
         img_path = 'data/color/'
@@ -172,10 +186,27 @@ class GuiController(object):
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
+        crop_left = int(self.view.settings_panel.param_xmin_entry.get())
+        crop_right = int(self.view.settings_panel.param_xmax_entry.get())
+        crop_top = int(self.view.settings_panel.param_ymin_entry.get())
+        crop_bottom = int(self.view.settings_panel.param_ymax_entry.get())
+
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
+            im = Image.open(rgb_output_path + f[0])
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
+                im2.save(rgb_output_path + f[0])
+            else:
+                print("crop dimension error! showing original image")
         if depth_output_path is not None:
             cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
+            im = Image.open(depth_output_path + f[0])
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
+                im2.save(depth_output_path + f[0])
+            else:
+                print("crop dimension error! showing original image")
         self.view.settings_panel.refresh_preview()
         print("done!")
 
