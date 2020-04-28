@@ -3,7 +3,6 @@ import tkinter as tk
 from PIL import ImageTk, Image
 from pathlib import Path
 from gui_config import *
-# from ttkwidgets import TickScale
 from tkinter import ttk, font
 
 class GuiViewSettings(object):
@@ -113,10 +112,22 @@ class GuiViewSettings(object):
             label="Sensitivity", from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 12")
         self.param_thres_slider.set(0.5)
 
+    def refresh_preview(self):
+        self.thres_source_img_label.destroy()
+        self.create_thres_preview()
+        self.thres_source_img_label.grid(row=0, column=0, padx=0, pady=0, ipady=0, sticky="snwe")
+        pass
+
     def create_thres_preview(self):
-        data_folder = Path(PREVIEW_IMG_PATH)
-        path = self.dirname / data_folder
-        image = Image.open(path)
+        data_folder = Path(PREVIEW_DIR_PATH)
+        data_folder_path = self.dirname / data_folder
+        image_path = DEFAULT_PREVIEW_IMG
+        image = Image.open(image_path)
+        if (len(os.listdir(data_folder_path)) != 0):
+            # preview image exists
+            image_path = data_folder_path / Path(os.listdir(data_folder_path)[0])
+            image = Image.open(image_path)
+
         [image_size_width, image_size_height] = image.size
         scale_factor = max((image_size_width / IMAGE_WIDTH_CAP), (image_size_height / IMAGE_HEIGHT_CAP))
         scaled_width = int(image_size_width / scale_factor)
@@ -124,7 +135,7 @@ class GuiViewSettings(object):
         if (scale_factor < 1):
             scaled_width = int(image_size_width * scale_factor)
             scaled_height = int(image_size_height * scale_factor)
-        self.thres_source_img = ImageTk.PhotoImage(Image.open(path).resize((scaled_width, scaled_height)))
+        self.thres_source_img = ImageTk.PhotoImage(Image.open(image_path).resize((scaled_width, scaled_height)))
         self.thres_source_img_label = tk.Label(self.thres_preview_frame, image = self.thres_source_img, 
             bg=RIGHT_FRAME_COLOR, padx=0, pady=0)
 

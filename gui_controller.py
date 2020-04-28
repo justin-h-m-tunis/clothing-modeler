@@ -6,9 +6,12 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
 import open3d as o3d
+from pathlib import Path
 import multiprocessing, time, os, shutil
 import numpy as np
 from motor_camera import *
+import cv2
+from bkgThresh import *
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -116,7 +119,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", self.preview_thres)
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
@@ -137,6 +140,41 @@ class GuiController(object):
     def do_nothing(self, event):
         print("i'm doing nothing")
         pass
+
+    def preview_thres(self, event):
+        curr_dirname = os.path.dirname(__file__)
+        # img_path = curr_dirname / Path("data/color")
+        # depth_path = curr_dirname / Path("data/depth")
+        # bkg_path = curr_dirname / Path("data/color_bkg")
+        # depth_bkg_path = curr_dirname / Path("data/depth_bkg")
+        img_path = 'data/color/'
+        depth_path = 'data/depth/'
+        bkg_path = 'data/color_bkg/'
+        depth_bkg_path = 'data/depth_bkg/'
+        dirs = [img_path, depth_path, bkg_path, depth_bkg_path]
+        for dir in dirs:
+            if (len(os.listdir(dir)) == 0): # exit when empty folder found
+                return 
+        print("Processing preview")
+        # temp, will pull from advanced settings panel later
+        depth_thresh = 30
+        rgb_thresh = 50
+        img_names = [os.listdir(img_path), os.listdir(depth_path)]
+        f = [img_names[0][0],img_names[1][0]]
+        img = cv2.imread(img_path + f[0])
+        rgb_dist = getBkgDistRGB(img,cv2.imread(bkg_path + f[0]))
+        depth = cv2.imread(depth_path + f[1])
+        depth_dist = getBkgDistDepth(depth,cv2.imread(depth_bkg_path + f[1]))
+        # cv2.imshow(' ',(rgb_dist*np.sqrt(1/3)).astype(np.uint8))
+        bkg_thresh_rgb = removeBkg(img,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
+        bkg_thresh_depth = removeBkg(depth,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
+        # cv2.imshow('',bkg_thresh_rgb)
+        cv2.imwrite(PREVIEW_DIR_PATH + f[0], bkg_thresh_rgb)
+        # cv2.imwrite('data/thresholded/' + f[1], bkg_thresh_depth)
+        # cv2.imwrite('data/pretty/' + f[0],(rgb_dist*np.sqrt(1/3)).astype(np.uint8))
+        self.view.settings_panel.refresh_preview()
+
+
 
     '''Main logic execution'''
     def run_system(self, event):
@@ -198,8 +236,9 @@ class GuiController(object):
         np.savez(self.settings_path, speed=speed, distance=distance,
             sensitivity=sensitivity, xmin_left=xmin_left, xmax_right=xmax_right,
             ymin_top=ymin_top, ymax_bottom=ymax_bottom)
+        self.view.manage_settings(self.parent, False)
         # run system
-        self.run_system(event)
+        # self.run_system(event)
 
     def cancel_settings(self, event):
         self.view.manage_settings(self.parent)
