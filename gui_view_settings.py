@@ -25,18 +25,21 @@ class GuiViewSettings(object):
     def create_title(self):
         self.title_text = tk.Label(self.settings_title_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 16", state="normal", relief="flat", text="Settings")
+        return self.title_text
 
     def create_settings_apply_button(self):
         self.settings_apply_button = tk.Button(self.settings_action_frame, text="Apply", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
+        return self.settings_apply_button
 
     def create_settings_cancel_button(self):
         self.settings_cancel_button = tk.Button(self.settings_action_frame, text="Cancel", 
             fg=WIN_BG_COLOR, bg=CANCEL_BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=CANCEL_BUTTON_FOCUS_COLOR,
             activeforeground=WIN_BG_COLOR)
+        return self.settings_cancel_button
 
 
     '''Motor frame implementations'''
@@ -44,12 +47,14 @@ class GuiViewSettings(object):
     def create_motor_title(self):
         self.motor_title_text = tk.Label(self.motor_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 14 underline", state="normal", relief="flat", text="Motor")
+        return self.motor_title_text
     
     def create_param_speed_slider(self):
         self.param_speed_slider = tk.Scale(self.motor_frame, relief="flat", sliderrelief="flat",
             orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
             label="Speed", from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 12")
         self.param_speed_slider.set(0.5)
+        return self.param_speed_slider
         # style = ttk.Style()
         # style.theme_use('clam')
         # style.configure('my.Horizontal.TScale', sliderlength=50, background='#FFFFFF',
@@ -63,12 +68,14 @@ class GuiViewSettings(object):
             bg="white", font="Ubuntu 12", cursor="hand2")
         self.motor_adv_font = font.Font(self.motor_adv, self.motor_adv.cget("font"))
         self.motor_adv.configure(font=self.motor_adv_font)
+        return self.motor_adv
 
     def create_test_spin_button(self):
         self.test_spin_button = tk.Button(self.motor_frame, text="Test Spin", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
+        return self.test_spin_button
 
 
 
@@ -78,26 +85,31 @@ class GuiViewSettings(object):
     def create_camera_title(self):
         self.camera_title_text = tk.Label(self.camera_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 14 underline", state="normal", relief="flat", text="Camera")
+        return self.camera_title_text
 
     def create_param_distance_label(self):
         self.param_distance_label = tk.Label(self.camera_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", relief="flat", text="Distance")
+        return self.param_distance_label
 
     def create_param_distance_entry(self):
         self.param_distance_entry = tk.Entry(self.camera_frame, fg=WIN_BG_COLOR,
             font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_distance_entry
 
     def create_camera_adv(self):
         self.camera_adv = tk.Label(self.camera_frame, text="Advanced", fg=WIN_BG_COLOR,
             bg="white", font="Ubuntu 12", cursor="hand2")
         self.camera_adv_font = font.Font(self.camera_adv, self.camera_adv.cget("font"))
         self.camera_adv.configure(font=self.camera_adv_font)
+        return self.camera_adv
 
     def create_test_picture_button(self):
         self.test_picture_button = tk.Button(self.camera_frame, text="Test Picture", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
+        return self.test_picture_button
 
 
 
@@ -106,12 +118,14 @@ class GuiViewSettings(object):
     def create_thres_title(self):
         self.thres_title_text = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 14 underline", state="normal", relief="flat", text="Thresholding")
+        return self.thres_title_text
 
     def create_param_thres_slider(self):
         self.param_thres_slider = tk.Scale(self.thres_frame, relief="flat", sliderrelief="flat",
             orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
             label="Sensitivity", from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 12")
         self.param_thres_slider.set(0.5)
+        return self.param_thres_slider
 
     def create_thres_preview(self):
         data_folder = Path(PREVIEW_IMG_PATH)
@@ -131,46 +145,56 @@ class GuiViewSettings(object):
     def create_param_xmin_label(self):
         self.param_xmin_label = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", relief="flat", text="Left")
+        return self.param_xmin_label
 
     def create_param_xmin_entry(self):
         self.param_xmin_entry = tk.Entry(self.thres_frame, fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", bg=ENTRY_COLOR, width=6, justify="center")
+        return self.param_xmin_entry
 
     def create_param_xmax_label(self):
         self.param_xmax_label = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", relief="flat", text="Right")
+        return self.param_xmax_label
 
     def create_param_xmax_entry(self):
         self.param_xmax_entry = tk.Entry(self.thres_frame, fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", bg=ENTRY_COLOR, width=6, justify="center")
+        return self.param_xmax_entry
 
     def create_param_ymin_label(self):
         self.param_ymin_label = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", relief="flat", text="Top")
+        return self.param_ymin_label
 
     def create_param_ymin_entry(self):
         self.param_ymin_entry = tk.Entry(self.thres_frame, fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", bg=ENTRY_COLOR, width=6, justify="center")
+        return self.param_ymin_entry
 
     def create_param_ymax_label(self):
         self.param_ymax_label = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", relief="flat", text="Bottom")
+        return self.param_ymax_label
 
     def create_param_ymax_entry(self):
         self.param_ymax_entry = tk.Entry(self.thres_frame, fg=WIN_BG_COLOR,
             font="Ubuntu 12", state="normal", bg=ENTRY_COLOR, width=6, justify="center")
+        return self.param_ymax_entry
 
     def create_thres_adv(self):
         self.thres_adv = tk.Label(self.thres_frame, text="Advanced", fg=WIN_BG_COLOR,
             bg="white", font="Ubuntu 12", cursor="hand2")
         self.thres_adv_font = font.Font(self.thres_adv, self.thres_adv.cget("font"))
         self.thres_adv.configure(font=self.thres_adv_font)
+        return self.thres_adv
 
     def create_preview_thres_button(self):
         self.prev_thres_button = tk.Button(self.thres_frame, text="Preview", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
+        return self.prev_thres_button
 
 
     '''Create and setup'''
@@ -197,30 +221,33 @@ class GuiViewSettings(object):
         self.create_settings_cancel_button()
 
         # create motor frame widgets
-        self.create_param_speed_slider()
-        self.create_test_spin_button()
-        self.create_motor_adv()
+        self.motor_widgets = [self.create_param_speed_slider(),
+                            self.create_test_spin_button(),
+                            self.create_motor_adv()]
 
         # create camera frame widgets
-        self.create_param_distance_label()
-        self.create_param_distance_entry()
-        self.create_camera_adv()
-        self.create_test_picture_button()
+        self.camera_widgets = [
+                                self.create_param_distance_label(),
+                                self.create_param_distance_entry(),
+                                self.create_camera_adv(),
+                                self.create_test_picture_button(),
+                               ]
 
         # create thres frame widgets
-        self.create_param_thres_slider()
-        self.create_thres_preview()
-        self.create_param_xmax_entry()
-        self.create_param_xmax_label()
-        self.create_param_xmin_entry()
-        self.create_param_xmin_label()
-        self.create_param_ymax_entry()
-        self.create_param_ymax_label()
-        self.create_param_ymin_entry()
-        self.create_param_ymin_label()
-        self.create_thres_adv()
-        self.create_preview_thres_button()
-
+        self.thres_widgets =    [
+                                self.create_param_thres_slider(),
+                                self.create_thres_preview(),
+                                self.create_param_xmax_entry(),
+                                self.create_param_xmax_label(),
+                                self.create_param_xmin_entry(),
+                                self.create_param_xmin_label(),
+                                self.create_param_ymax_entry(),
+                                self.create_param_ymax_label(),
+                                self.create_param_ymin_entry(),
+                                self.create_param_ymin_label(),
+                                self.create_thres_adv(),
+                                self.create_preview_thres_button(),
+                                ]
     def setup_layout(self):
         # setup frames
         self.settings_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)

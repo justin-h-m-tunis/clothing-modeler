@@ -39,9 +39,9 @@ class GuiController(object):
     def init_menu(self):
         self.menubar = tk.Menu(window)
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.file_menu.add_command(label="Import...", command=self.do_nothing)
-        self.file_menu.add_command(label="Export...", command=self.do_nothing)
-        # self.file_menu.add_command(label="Save", command=self.do_nothing)
+        self.file_menu.add_command(label="Import...", command=lambda : None)
+        self.file_menu.add_command(label="Export...", command=lambda : None)
+        # self.file_menu.add_command(label="Save", command=lambda : None)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=on_closing)
         self.menubar.add_cascade(label="File", menu=self.file_menu)
@@ -51,7 +51,7 @@ class GuiController(object):
         self.menubar.add_cascade(label="Tools", menu=self.tool_menu)
 
         self.help_menu = tk.Menu(self.menubar, tearoff=0)
-        # self.help_menu.add_command(label="Help Index", command=self.do_nothing)
+        # self.help_menu.add_command(label="Help Index", command=lambda : None)
         self.help_menu.add_command(label="About", command=self.open_about)
         self.menubar.add_cascade(label="Help", menu=self.help_menu)
 
@@ -79,49 +79,49 @@ class GuiController(object):
             lambda e: self.view.settings_panel.motor_adv_font.configure(underline = True))
         self.view.settings_panel.motor_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.motor_adv_font.configure(underline = False))
-        self.view.settings_panel.motor_adv.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.motor_adv.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_motor_test_spin(self):
         self.view.settings_panel.test_spin_button.bind("<Enter>",
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.test_spin_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_camera_adv_option(self):
         self.view.settings_panel.camera_adv.bind("<Enter>",
             lambda e: self.view.settings_panel.camera_adv_font.configure(underline = True))
         self.view.settings_panel.camera_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.camera_adv_font.configure(underline = False))
-        self.view.settings_panel.camera_adv.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.camera_adv.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_camera_test_picture(self):
         self.view.settings_panel.test_picture_button.bind("<Enter>",
             lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.test_picture_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_picture_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.test_picture_button.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.test_picture_button.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_thres_adv_option(self):
         self.view.settings_panel.thres_adv.bind("<Enter>",
             lambda e: self.view.settings_panel.thres_adv_font.configure(underline = True))
         self.view.settings_panel.thres_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.thres_adv_font.configure(underline = False))
-        self.view.settings_panel.thres_adv.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.thres_adv.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_preview_thres(self):
         self.view.settings_panel.prev_thres_button.bind("<Enter>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
             lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.settings_apply_button.bind("<Leave>",
             lambda e: self.view.settings_panel.settings_apply_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.settings_apply_button.bind("<ButtonRelease-1>", self.do_nothing)
+        self.view.settings_panel.settings_apply_button.bind("<ButtonRelease-1>", lambda : None)
 
     def bind_settings_cancel(self):
         self.view.settings_panel.settings_cancel_button.bind("<Enter>",
@@ -129,12 +129,6 @@ class GuiController(object):
         self.view.settings_panel.settings_cancel_button.bind("<Leave>",
             lambda e: self.view.settings_panel.settings_cancel_button.configure(bg = CANCEL_BUTTON_COLOR))
         self.view.settings_panel.settings_cancel_button.bind("<ButtonRelease-1>", self.cancel_settings)
-
-
-    '''Actions on key binding'''
-    def do_nothing(self, event):
-        print("i'm doing nothing")
-        pass
 
     '''Main logic execution'''
     def run_system(self, event):
