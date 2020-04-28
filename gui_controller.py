@@ -12,6 +12,7 @@ import numpy as np
 from motor_camera import *
 import cv2
 from bkgThresh import *
+from PIL import Image
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -172,11 +173,22 @@ class GuiController(object):
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
+        crop_left = int(self.view.settings_panel.param_xmin_entry.get())
+        crop_right = int(self.view.settings_panel.param_xmax_entry.get())
+        crop_top = int(self.view.settings_panel.param_ymin_entry.get())
+        crop_bottom = int(self.view.settings_panel.param_ymax_entry.get())
+
 
         if rgb_path is not None:
             cv2.imwrite(rgb_path + f[0], bkg_thresh_rgb)
+            im = Image.open(rgb_path + f[0])
+            im.crop((crop_left, crop_top, crop_right, crop_bottom))
+            im.save(rgb_path + f[0])
         if depth_path is not None:
             cv2.imwrite(depth_path + f[0], bkg_thresh_depth)
+            im = Image.open(depth_path + f[0])
+            im.crop((crop_left, crop_top, crop_right, crop_bottom))
+            im.save(depth_path + f[0])
         self.view.settings_panel.refresh_preview()
 
     '''Main logic execution'''
