@@ -47,6 +47,7 @@ class GuiController(object):
         self.bind_preview_thres()
         self.bind_thres_adv_frame()
         self.bind_motor_adv_frame()
+        self.bind_camera_adv_frame()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -77,6 +78,10 @@ class GuiController(object):
     def bind_motor_adv_frame(self):
         self.view.settings_panel.motor_adv_frame.bind("<FocusOut>", lambda e: self.view.settings_panel.forget_motor_adv())
         self.view.settings_panel.close_motor_button.bind("<ButtonRelease-1>", lambda e: self.view.settings_panel.forget_motor_adv())
+
+    def bind_camera_adv_frame(self):
+        self.view.settings_panel.camera_adv_frame.bind("<FocusOut>", lambda e: self.view.settings_panel.forget_camera_adv())
+        self.view.settings_panel.close_camera_button.bind("<ButtonRelease-1>", lambda e: self.view.settings_panel.forget_camera_adv())
 
     def bind_intro_text(self):
         self.view.intro_text.bind("<Configure>", self.scale_font)
@@ -121,7 +126,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.camera_adv_font.configure(underline = True))
         self.view.settings_panel.camera_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.camera_adv_font.configure(underline = False))
-        self.view.settings_panel.camera_adv.bind("<ButtonRelease-1>", lambda : None)
+        self.view.settings_panel.camera_adv.bind("<ButtonRelease-1>", lambda e : self.view.settings_panel.open_camera_adv())
 
     def bind_camera_test_picture(self):
         self.view.settings_panel.test_picture_button.bind("<Enter>",
@@ -303,6 +308,67 @@ class GuiController(object):
         self.view.settings_panel.param_angular_velocity.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_angular_velocity.insert(0, data["angular_velocity"])
 
+        self.view.settings_panel.param_fx.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_fx.insert(0, data["fx"])
+        self.view.settings_panel.param_fy.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_fy.insert(0, data["fy"])
+        self.view.settings_panel.param_ux.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_ux.insert(0, data["ux"])
+        self.view.settings_panel.param_vy.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_vy.insert(0, data["vy"])
+
+        self.view.settings_panel.param_r1_11.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_11.insert(0, data["r1_11"])
+        self.view.settings_panel.param_r1_12.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_12.insert(0, data["r1_12"])
+        self.view.settings_panel.param_r1_13.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_13.insert(0, data["r1_13"])
+        self.view.settings_panel.param_r1_21.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_21.insert(0, data["r1_21"])
+        self.view.settings_panel.param_r1_22.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_22.insert(0, data["r1_22"])
+        self.view.settings_panel.param_r1_23.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_23.insert(0, data["r1_23"])
+        self.view.settings_panel.param_r1_31.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_31.insert(0, data["r1_31"])
+        self.view.settings_panel.param_r1_32.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_32.insert(0, data["r1_32"])
+        self.view.settings_panel.param_r1_33.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r1_33.insert(0, data["r1_33"])
+
+        self.view.settings_panel.param_r2_11.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_11.insert(0, data["r2_11"])
+        self.view.settings_panel.param_r2_12.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_12.insert(0, data["r2_12"])
+        self.view.settings_panel.param_r2_13.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_13.insert(0, data["r2_13"])
+        self.view.settings_panel.param_r2_21.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_21.insert(0, data["r2_21"])
+        self.view.settings_panel.param_r2_22.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_22.insert(0, data["r2_22"])
+        self.view.settings_panel.param_r2_23.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_23.insert(0, data["r2_23"])
+        self.view.settings_panel.param_r2_31.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_31.insert(0, data["r2_31"])
+        self.view.settings_panel.param_r2_32.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_32.insert(0, data["r2_32"])
+        self.view.settings_panel.param_r2_33.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_r2_33.insert(0, data["r2_33"])
+
+        self.view.settings_panel.param_t1_11.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t1_11.insert(0, data["t1_11"])
+        self.view.settings_panel.param_t1_21.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t1_21.insert(0, data["t1_21"])
+        self.view.settings_panel.param_t1_31.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t1_31.insert(0, data["t1_21"])
+
+        self.view.settings_panel.param_t2_11.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t2_11.insert(0, data["t2_11"])
+        self.view.settings_panel.param_t2_21.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t2_21.insert(0, data["t2_21"])
+        self.view.settings_panel.param_t2_31.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_t2_31.insert(0, data["t2_21"])
+
     '''Open settings panel'''
     def run_settings(self, event, action=None):
         if (os.path.exists(self.settings_path)):
@@ -334,6 +400,39 @@ class GuiController(object):
         fall_time = self.view.settings_panel.param_fall_time.get()
         delay_time = self.view.settings_panel.param_delay_time.get()
         angular_velocity = self.view.settings_panel.param_angular_velocity.get()
+
+        fx = self.view.settings_panel.param_fx.get()
+        fy = self.view.settings_panel.param_fy.get()
+        ux = self.view.settings_panel.param_ux.get()
+        vy = self.view.settings_panel.param_vy.get()
+
+        r1_11 = self.view.settings_panel.param_r1_11.get()
+        r1_12 = self.view.settings_panel.param_r1_12.get()
+        r1_13 = self.view.settings_panel.param_r1_13.get()
+        r1_21 = self.view.settings_panel.param_r1_21.get()
+        r1_22 = self.view.settings_panel.param_r1_22.get()
+        r1_23 = self.view.settings_panel.param_r1_23.get()
+        r1_31 = self.view.settings_panel.param_r1_31.get()
+        r1_32 = self.view.settings_panel.param_r1_32.get()
+        r1_33 = self.view.settings_panel.param_r1_33.get()
+
+        r2_11 = self.view.settings_panel.param_r2_11.get()
+        r2_12 = self.view.settings_panel.param_r2_12.get()
+        r2_13 = self.view.settings_panel.param_r2_13.get()
+        r2_21 = self.view.settings_panel.param_r2_21.get()
+        r2_22 = self.view.settings_panel.param_r2_22.get()
+        r2_23 = self.view.settings_panel.param_r2_23.get()
+        r2_31 = self.view.settings_panel.param_r2_31.get()
+        r2_32 = self.view.settings_panel.param_r2_32.get()
+        r2_33 = self.view.settings_panel.param_r2_33.get()
+
+        t1_11 = self.view.settings_panel.param_t1_11.get()
+        t1_21 = self.view.settings_panel.param_t1_21.get()
+        t1_31 = self.view.settings_panel.param_t1_31.get()
+
+        t2_11 = self.view.settings_panel.param_t2_11.get()
+        t2_21 = self.view.settings_panel.param_t2_21.get()
+        t2_31 = self.view.settings_panel.param_t2_31.get()
         
         np.savez(self.settings_path,
                     speed=speed,
@@ -353,7 +452,35 @@ class GuiController(object):
                     rise_time=rise_time,
                     fall_time=fall_time,
                     delay_time=delay_time,
-                    angular_velocity=angular_velocity
+                    angular_velocity=angular_velocity,
+                    fx=fx,
+                    fy=fy,
+                    ux=ux,
+                    vy=vy,
+                    r1_11=r1_11,
+                    r1_12=r1_12,
+                    r1_13=r1_13,
+                    r1_21=r1_21,
+                    r1_22=r1_22,
+                    r1_23=r1_23,
+                    r1_31=r1_31,
+                    r1_32=r1_32,
+                    r1_33=r1_33,
+                    r2_11=r2_11,
+                    r2_12=r2_12,
+                    r2_13=r2_13,
+                    r2_21=r2_21,
+                    r2_22=r2_22,
+                    r2_23=r2_23,
+                    r2_31=r2_31,
+                    r2_32=r2_32,
+                    r2_33=r2_33,
+                    t1_11=t1_11,
+                    t1_21=t1_21,
+                    t1_31=t1_31,
+                    t2_11=t2_11,
+                    t2_21=t2_21,
+                    t2_31=t2_31,
                 )
         self.view.manage_settings(self.parent, False)
         # run system
