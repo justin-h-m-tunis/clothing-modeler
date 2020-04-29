@@ -46,6 +46,7 @@ class GuiController(object):
         self.bind_thres_adv_option()
         self.bind_preview_thres()
         self.bind_thres_adv_frame()
+        self.bind_motor_adv_frame()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -72,6 +73,10 @@ class GuiController(object):
     def bind_thres_adv_frame(self):
         self.view.settings_panel.thres_adv_frame.bind("<FocusOut>", lambda e: self.view.settings_panel.forget_thres_adv())
         self.view.settings_panel.close_thres_button.bind("<ButtonRelease-1>", lambda e: self.view.settings_panel.forget_thres_adv())
+
+    def bind_motor_adv_frame(self):
+        self.view.settings_panel.motor_adv_frame.bind("<FocusOut>", lambda e: self.view.settings_panel.forget_motor_adv())
+        self.view.settings_panel.close_motor_button.bind("<ButtonRelease-1>", lambda e: self.view.settings_panel.forget_motor_adv())
 
     def bind_intro_text(self):
         self.view.intro_text.bind("<Configure>", self.scale_font)
@@ -102,7 +107,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.motor_adv_font.configure(underline = True))
         self.view.settings_panel.motor_adv.bind("<Leave>",
             lambda e: self.view.settings_panel.motor_adv_font.configure(underline = False))
-        self.view.settings_panel.motor_adv.bind("<ButtonRelease-1>", lambda : None)
+        self.view.settings_panel.motor_adv.bind("<ButtonRelease-1>", lambda e : self.view.settings_panel.open_motor_adv())
 
     def bind_motor_test_spin(self):
         self.view.settings_panel.test_spin_button.bind("<Enter>",
@@ -289,6 +294,15 @@ class GuiController(object):
         self.view.settings_panel.param_depth_dist.insert(0, data["depth_dist"])
         self.view.settings_panel.hue_weight_slider.set(data["hue_weight"])
 
+        self.view.settings_panel.param_rise_time.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_rise_time.insert(0, data["rise_time"])
+        self.view.settings_panel.param_fall_time.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_fall_time.insert(0, data["fall_time"])
+        self.view.settings_panel.param_delay_time.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_delay_time.insert(0, data["delay_time"])
+        self.view.settings_panel.param_angular_velocity.delete(0, MAX_CHAR_LEN)
+        self.view.settings_panel.param_angular_velocity.insert(0, data["angular_velocity"])
+
     '''Open settings panel'''
     def run_settings(self, event, action=None):
         if (os.path.exists(self.settings_path)):
@@ -315,6 +329,11 @@ class GuiController(object):
         color_dist = self.view.settings_panel.param_color_dist.get()
         depth_dist = self.view.settings_panel.param_depth_dist.get()
         hue_weight = self.view.settings_panel.hue_weight_slider.get()
+
+        rise_time = self.view.settings_panel.param_rise_time.get()
+        fall_time = self.view.settings_panel.param_fall_time.get()
+        delay_time = self.view.settings_panel.param_delay_time.get()
+        angular_velocity = self.view.settings_panel.param_angular_velocity.get()
         
         np.savez(self.settings_path,
                     speed=speed,
@@ -330,7 +349,11 @@ class GuiController(object):
                     macrosteps=macrosteps,
                     color_dist=color_dist,
                     depth_dist=depth_dist,
-                    hue_weight=hue_weight
+                    hue_weight=hue_weight,
+                    rise_time=rise_time,
+                    fall_time=fall_time,
+                    delay_time=delay_time,
+                    angular_velocity=angular_velocity
                 )
         self.view.manage_settings(self.parent, False)
         # run system
