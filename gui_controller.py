@@ -267,11 +267,10 @@ class GuiController(object):
         img_names = [os.listdir(img_path), os.listdir(depth_path)]
         f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
         img = cv2.imread(img_path + f[0])
-        rgb_dist = getBkgDistRGB(img,cv2.imread(bkg_path + f[0]))
         depth = cv2.imread(depth_path + f[1])
-        depth_dist = getBkgDistDepth(depth,cv2.imread(depth_bkg_path + f[1]))
-        bkg_thresh_rgb = removeBkg(img,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
-        bkg_thresh_depth = removeBkg(depth,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
+        dist = getBkgDistances(img,depth,cv2.imread(bkg_path + f[0]),cv2.imread(depth_bkg_path + f[1]))
+        bkg_thresh_rgb = removeBkg(img,dist)
+        bkg_thresh_depth = removeBkg(depth,dist)
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
@@ -303,7 +302,7 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data', get_images=True, Threshold_images=True,Stitch_images=True):
+    def run_system(self, img_path='data', get_images=True, Threshold_images=False,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()
@@ -316,8 +315,7 @@ class GuiController(object):
                 def raise_serial_exception():
                     raise Exception("Motor disconnected, aborting!")
 
-                self.init_model(onSerialFail=raise_serial_exception())
-                self.model.run_motor_camera(img_path=img_path, settings=settings, onSerialFail=raise_serial_exception())
+                self.model.run_motor_camera(img_path=img_path)
             except Exception as E:
                 print(E)
                 return
@@ -467,10 +465,12 @@ class GuiController(object):
         ymax_bottom = self.view.settings_panel.param_ymax_entry.get()
         baud = 9600
         com = 'COM3'
-        w_max = speed*(MAXIMUM_OMEGA - MINIMUM_OMEGA) + MINIMUM_OMEGA
+        w_max = np.power(MAXIMUM_OMEGA/MINIMUM_OMEGA,speed)*MINIMUM_OMEGA
+        print(w_max)
         tr = speed*(MAXIMUM_TR- MINIMUM_TR) + MINIMUM_TR
         delay = speed*(MAXIMUM_DELAY - MINIMUM_DELAY) + MINIMUM_DELAY
         macrostep_time = (360/200)/w_max + tr + delay + DELAY_TOL
+        print(macrostep_time)
         macrosteps=200
 
         color_dist = self.view.settings_panel.param_color_dist.get()

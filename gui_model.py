@@ -15,6 +15,7 @@ class GuiModel(object):
             com='COM3'
         else:
             macrostep_time = int(settings['macrostep_time'])
+            print(macrostep_time)
             baudrate = int(settings['baud'])
             com = settings['com']
         self.pathname = "data/"
