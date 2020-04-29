@@ -22,6 +22,7 @@ class GuiViewSettings(object):
         self.config_thres_preview_frame_row_col()
         self.config_thres_adv_frame_row_col()
         self.config_motor_adv_frame_row_col()
+        self.config_camera_adv_frame_row_col()
 
     def create_title(self):
         self.title_text = tk.Label(self.settings_title_frame, bg="white", fg=WIN_BG_COLOR,
@@ -293,7 +294,67 @@ class GuiViewSettings(object):
             activeforeground=WIN_BG_COLOR)
         return self.close_motor_button
 
+    '''Camera advanced frame implementations'''
 
+    def create_fx_label(self):
+        self.fx_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="fx")
+        return self.fx_label
+
+    def create_fx_entry(self):
+        self.param_fx = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=5, justify="center")
+        return self.param_fx
+
+    def create_fy_label(self):
+        self.fy_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="fy")
+        return self.fy_label
+
+    def create_fy_entry(self):
+        self.param_fy = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=5, justify="center")
+        return self.param_fy
+
+    def create_ux_label(self):
+        self.ux_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Ux")
+        return self.ux_label
+
+    def create_ux_entry(self):
+        self.param_ux = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=5, justify="center")
+        return self.param_ux
+
+    def create_vy_label(self):
+        self.vy_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Vy")
+        return self.vy_label
+
+    def create_vy_entry(self):
+        self.param_vy = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=5, justify="center")
+        return self.param_vy
+
+
+    def create_close_camera_button(self):
+        self.close_camera_button = tk.Button(self.camera_adv_frame, text="Close", 
+            fg=WIN_BG_COLOR, bg=CANCEL_BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=CANCEL_BUTTON_FOCUS_COLOR,
+            activeforeground=WIN_BG_COLOR)
+        return self.close_camera_button
+
+    def create_r1_matrix(self):
+        self.batch_process_r1()
+
+    def create_t1_matrix(self):
+        self.batch_process_t1()
+
+    def create_r2_matrix(self):
+        self.batch_process_r2()
+
+    def create_t2_matrix(self):
+        self.batch_process_t2()
 
     '''Create and setup'''
 
@@ -379,7 +440,22 @@ class GuiViewSettings(object):
                                     self.create_delay_time_entry(),
                                     ]
 
-
+        # create camera adv frame widgets
+        self.camera_adv_widgets =    [
+                                    self.create_close_camera_button(),
+                                    self.create_fx_label(),
+                                    self.create_fx_entry(),
+                                    self.create_fy_label(),
+                                    self.create_fy_entry(),
+                                    self.create_ux_label(),
+                                    self.create_ux_entry(),
+                                    self.create_vy_label(),
+                                    self.create_vy_entry(),
+                                    self.create_r1_matrix(),
+                                    self.create_t1_matrix(),
+                                    self.create_r2_matrix(),
+                                    self.create_t2_matrix(),
+                                    ]
         
     def setup_layout(self):
         # setup frames
@@ -434,7 +510,6 @@ class GuiViewSettings(object):
         self.hue_weight_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
 
         # setup widgets in motor adv frame
-        
         self.angular_velocity_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
         self.param_angular_velocity.grid(row=0, column=2, columnspan=2, pady=(40,0), sticky="")
         self.param_rise_time.grid(row=1, column=2, columnspan=2, sticky="")
@@ -443,8 +518,22 @@ class GuiViewSettings(object):
         self.param_fall_time.grid(row=2, column=2, columnspan=2, sticky="")
         self.delay_time_label.grid(row=3, column=0, columnspan=2, sticky="e")
         self.param_delay_time.grid(row=3, column=2, columnspan=2, sticky="")
-        
         self.close_motor_button.grid(row=4, column=2, columnspan=2, sticky="se", padx=20, pady=20)
+
+        # setup widgets in camera adv frame
+        self.close_camera_button.grid(row=8, column=4, columnspan=2, sticky="se", padx=20, pady=20)
+        self.fx_label.grid(row=0, column=0, columnspan=1, pady=(40,0), padx=(20, 0), sticky="")
+        self.param_fx.grid(row=0, column=1, columnspan=2, pady=(40,0), sticky="")
+        self.fy_label.grid(row=0, column=3, columnspan=1, pady=(40,0), sticky="e")
+        self.param_fy.grid(row=0, column=4, columnspan=2, pady=(40,0), padx=(0, 0), sticky="")
+        self.ux_label.grid(row=1, column=0, columnspan=1, padx=(20, 0), sticky="")
+        self.param_ux.grid(row=1, column=1, columnspan=2, sticky="")
+        self.vy_label.grid(row=1, column=3, columnspan=1, sticky="e")
+        self.param_vy.grid(row=1, column=4, columnspan=2, padx=(0, 0), sticky="")
+        self.place_r1_matrix()
+        self.place_t1_matrix()
+        self.place_r2_matrix()
+        self.place_t2_matrix()
 
     def config_setting_frame_row_col(self):
         self.settings_frame.grid_columnconfigure(0, weight=1)
@@ -520,6 +609,23 @@ class GuiViewSettings(object):
         self.motor_adv_frame.grid_rowconfigure(3, weight=10)
         self.motor_adv_frame.grid_rowconfigure(4, weight=10)
 
+    def config_camera_adv_frame_row_col(self):
+        self.camera_adv_frame.grid_columnconfigure(0, weight=1)
+        self.camera_adv_frame.grid_columnconfigure(1, weight=1)
+        self.camera_adv_frame.grid_columnconfigure(2, weight=1)
+        self.camera_adv_frame.grid_columnconfigure(3, weight=1)
+        self.camera_adv_frame.grid_columnconfigure(4, weight=1)
+        self.camera_adv_frame.grid_columnconfigure(5, weight=1)
+        self.camera_adv_frame.grid_rowconfigure(0, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(1, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(2, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(3, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(4, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(5, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(6, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(7, weight=10)
+        self.camera_adv_frame.grid_rowconfigure(8, weight=1)
+
     def forget_layout(self):
         self.settings_frame.place_forget()
 
@@ -537,3 +643,116 @@ class GuiViewSettings(object):
     def forget_motor_adv(self):
         self.motor_adv_frame.place_forget()
 
+    def open_camera_adv(self):
+        self.camera_adv_frame.place(anchor="center", rely=0.5, relx=0.5, relheight=0.8, relwidth=0.5)
+        self.camera_adv_frame.focus_set()
+
+    def forget_camera_adv(self):
+        self.camera_adv_frame.place_forget()
+
+
+    def batch_process_r1(self):
+        # create R1 matrix
+        self.r1_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", relief="flat", text="R1")
+        self.param_r1_11 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_12 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_13 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_21 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_22 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_23 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_31 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_32 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r1_33 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+
+    def batch_process_t1(self):
+        # create T1 matrix
+        self.t1_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", relief="flat", text="T1")
+        self.param_t1_11 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_t1_21 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_t1_31 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+      
+
+    def place_r1_matrix(self):
+        self.r1_label.grid(row=2, column=0, columnspan=1, padx=(20,0), sticky="")
+        self.param_r1_11.grid(row=2, column=1, padx=(20,0), sticky="")
+        self.param_r1_12.grid(row=2, column=2, sticky="")
+        self.param_r1_13.grid(row=2, column=3, sticky="")
+        self.param_r1_21.grid(row=3, column=1, padx=(20,0), sticky="")
+        self.param_r1_22.grid(row=3, column=2, sticky="")
+        self.param_r1_23.grid(row=3, column=3, sticky="")
+        self.param_r1_31.grid(row=4, column=1, padx=(20,0), sticky="")
+        self.param_r1_32.grid(row=4, column=2, sticky="")
+        self.param_r1_33.grid(row=4, column=3, sticky="")
+
+    def place_t1_matrix(self):
+        self.t1_label.grid(row=2, column=4, columnspan=1, padx=(0,0), sticky="")
+        self.param_t1_11.grid(row=2, column=5, padx=(0,0), sticky="w")
+        self.param_t1_21.grid(row=3, column=5, sticky="w")
+        self.param_t1_31.grid(row=4, column=5, sticky="w")
+
+    def batch_process_r2(self):
+        # create R1 matrix
+        self.r2_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", relief="flat", text="R2")
+        self.param_r2_11 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_12 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_13 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_21 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_22 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_23 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_31 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_32 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_r2_33 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+
+    def batch_process_t2(self):
+        # create T1 matrix
+        self.t2_label = tk.Label(self.camera_adv_frame, bg="white", fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", relief="flat", text="T2")
+        self.param_t2_11 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_t2_21 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+        self.param_t2_31 = tk.Entry(self.camera_adv_frame, fg=WIN_BG_COLOR,
+                font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=3, justify="center")
+      
+
+    def place_r2_matrix(self):
+        self.r2_label.grid(row=5, column=0, columnspan=1, padx=(20,0), sticky="s")
+        self.param_r2_11.grid(row=5, column=1, padx=(20,0), sticky="s")
+        self.param_r2_12.grid(row=5, column=2, sticky="s")
+        self.param_r2_13.grid(row=5, column=3, sticky="s")
+        self.param_r2_21.grid(row=6, column=1, padx=(20,0), sticky="s")
+        self.param_r2_22.grid(row=6, column=2, sticky="s")
+        self.param_r2_23.grid(row=6, column=3, sticky="s")
+        self.param_r2_31.grid(row=7, column=1, padx=(20,0), sticky="s")
+        self.param_r2_32.grid(row=7, column=2, sticky="s")
+        self.param_r2_33.grid(row=7, column=3, sticky="s")
+
+    def place_t2_matrix(self):
+        self.t2_label.grid(row=5, column=4, columnspan=1, padx=(0,0), sticky="s")
+        self.param_t2_11.grid(row=5, column=5, padx=(0,0), sticky="ws")
+        self.param_t2_21.grid(row=6, column=5, sticky="ws")
+        self.param_t2_31.grid(row=7, column=5, sticky="ws")
