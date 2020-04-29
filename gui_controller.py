@@ -174,9 +174,70 @@ class GuiController(object):
             return True
         if (crop_right < 0 or crop_right > width):
             return True
-        if (crop_left > crop_right or crop_top > crop_bottom):
+        if (crop_left >= crop_right or crop_top >= crop_bottom):
             return True
         return False
+
+    '''checks thresholding preview entry errors'''
+    def parse_thres_depth_rgb_dist(self):
+        depth_str = self.view.settings_panel.param_depth_dist.get()
+        rgb_str = self.view.settings_panel.param_color_dist.get()
+        settings = np.load(self.settings_path)
+        
+        if (depth_str == ''):
+            if settings["depth_dist"] == '':
+                depth_result = 50
+            else:
+                depth_result = float(settings["depth_dist"])
+        else:
+            depth_result = float(depth_str)
+        
+        if (rgb_str == ''):
+            if settings["color_dist"] == '':
+                rgb_result = 30
+            else:
+                rgb_result = float(settings["color_dist"])
+        else:
+            rgb_result = float(rgb_str)
+        return (depth_result, rgb_result)
+
+    '''checks thresholding preview entry errors'''
+    def parse_crop_params(self):
+        crop_left_str = self.view.settings_panel.param_xmin_entry.get()
+        crop_right_str = self.view.settings_panel.param_xmax_entry.get()
+        crop_top_str = self.view.settings_panel.param_ymin_entry.get()
+        crop_bottom_str = self.view.settings_panel.param_ymax_entry.get()
+        settings = np.load(self.settings_path)
+
+        if (crop_left_str == ''):
+            if settings["xmin_left"] == '':
+                crop_left_result = -1
+            else:
+                crop_left_result = int(settings["xmin_left"])
+        else:
+            crop_left_result = int(crop_left_str)
+        if (crop_right_str == ''):
+            if settings["xmax_right"] == '':
+                crop_right_result = -1
+            else:
+                crop_right_result = int(settings["xmax_right"])
+        else:
+            crop_right_result = int(crop_right_str)
+        if (crop_top_str == ''):
+            if settings["ymin_top"] == '':
+                crop_top_result = -1
+            else:
+                crop_top_result = int(settings["ymin_top"])
+        else:
+            crop_top_result = int(crop_top_str)
+        if (crop_bottom_str == ''):
+            if settings["ymax_bottom"] == '':
+                crop_bottom_result = -1
+            else:
+                crop_bottom_result = int(settings["ymax_bottom"])
+        else:
+            crop_bottom_result = int(crop_bottom_str)
+        return (crop_left_result, crop_right_result, crop_top_result, crop_bottom_result)
 
     def img_thres(self, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
@@ -189,9 +250,8 @@ class GuiController(object):
             if (len(os.listdir(dir)) == 0): # exit when empty folder found
                 return 
         print("Processing image " + str(img_ind))
-        # temp, will pull from advanced settings panel later
-        depth_thresh = int(self.view.settings_panel.param_depth_dist.get())
-        rgb_thresh = int(self.view.settings_panel.param_color_dist.get())
+        # pull parameters from settings/preview panel
+        (depth_thresh, rgb_thresh) = self.parse_thres_depth_rgb_dist()
 
         img_names = [os.listdir(img_path), os.listdir(depth_path)]
         f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
@@ -204,11 +264,7 @@ class GuiController(object):
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
-
-        crop_left = int(self.view.settings_panel.param_xmin_entry.get())
-        crop_right = int(self.view.settings_panel.param_xmax_entry.get())
-        crop_top = int(self.view.settings_panel.param_ymin_entry.get())
-        crop_bottom = int(self.view.settings_panel.param_ymax_entry.get())
+        (crop_left, crop_right, crop_top, crop_bottom) = self.parse_crop_params()
 
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
