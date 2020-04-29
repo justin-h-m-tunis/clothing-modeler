@@ -21,6 +21,7 @@ class GuiViewSettings(object):
         self.config_setting_action_frame_row_col()
         self.config_thres_preview_frame_row_col()
         self.config_thres_adv_frame_row_col()
+        self.config_motor_adv_frame_row_col()
 
     def create_title(self):
         self.title_text = tk.Label(self.settings_title_frame, bg="white", fg=WIN_BG_COLOR,
@@ -243,6 +244,57 @@ class GuiViewSettings(object):
         return self.close_thres_button
 
 
+    '''Motor advanced frame implementations'''
+
+    def create_rise_time_label(self):
+        self.rise_time_label = tk.Label(self.motor_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Rise Time")
+        return self.rise_time_label
+
+    def create_fall_time_label(self):
+        self.fall_time_label = tk.Label(self.motor_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Fall Time")
+        return self.fall_time_label
+
+    def create_delay_time_label(self):
+        self.delay_time_label = tk.Label(self.motor_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Delay Time")
+        return self.delay_time_label
+
+    def create_angular_velocity_label(self):
+        self.angular_velocity_label = tk.Label(self.motor_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Angular Velocity")
+        return self.angular_velocity_label
+
+    def create_rise_time_entry(self):
+        self.param_rise_time = tk.Entry(self.motor_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_rise_time
+
+    def create_fall_time_entry(self):
+        self.param_fall_time = tk.Entry(self.motor_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_fall_time
+
+    def create_delay_time_entry(self):
+        self.param_delay_time = tk.Entry(self.motor_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_delay_time
+
+    def create_angular_velocity_entry(self):
+        self.param_angular_velocity = tk.Entry(self.motor_adv_frame, fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", bg=ENTRY_COLOR, width=11, justify="center")
+        return self.param_angular_velocity
+
+    def create_close_motor_button(self):
+        self.close_motor_button = tk.Button(self.motor_adv_frame, text="Close", 
+            fg=WIN_BG_COLOR, bg=CANCEL_BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=CANCEL_BUTTON_FOCUS_COLOR,
+            activeforeground=WIN_BG_COLOR)
+        return self.close_motor_button
+
+
+
     '''Create and setup'''
 
     def create_widgets(self):    
@@ -313,6 +365,21 @@ class GuiViewSettings(object):
                                     self.create_close_thres_button(),
                                     self.create_hue_weight_slider(),
                                     ]
+
+        # create motor adv frame widgets
+        self.motor_adv_widgets =    [
+                                    self.create_close_motor_button(),
+                                    self.create_angular_velocity_label(),
+                                    self.create_rise_time_label(),
+                                    self.create_fall_time_label(),
+                                    self.create_delay_time_label(),
+                                    self.create_rise_time_entry(),
+                                    self.create_angular_velocity_entry(),
+                                    self.create_fall_time_entry(),
+                                    self.create_delay_time_entry(),
+                                    ]
+
+
         
     def setup_layout(self):
         # setup frames
@@ -365,6 +432,19 @@ class GuiViewSettings(object):
         self.param_depth_dist.grid(row=2, column=2, columnspan=2, sticky="")
         self.close_thres_button.grid(row=3, column=2, columnspan=2, sticky="se", padx=20, pady=20)
         self.hue_weight_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+
+        # setup widgets in motor adv frame
+        
+        self.angular_velocity_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.param_angular_velocity.grid(row=0, column=2, columnspan=2, pady=(40,0), sticky="")
+        self.param_rise_time.grid(row=1, column=2, columnspan=2, sticky="")
+        self.rise_time_label.grid(row=1, column=0, columnspan=2, sticky="e")
+        self.fall_time_label.grid(row=2, column=0, columnspan=2, sticky="e")
+        self.param_fall_time.grid(row=2, column=2, columnspan=2, sticky="")
+        self.delay_time_label.grid(row=3, column=0, columnspan=2, sticky="e")
+        self.param_delay_time.grid(row=3, column=2, columnspan=2, sticky="")
+        
+        self.close_motor_button.grid(row=4, column=2, columnspan=2, sticky="se", padx=20, pady=20)
 
     def config_setting_frame_row_col(self):
         self.settings_frame.grid_columnconfigure(0, weight=1)
@@ -429,6 +509,17 @@ class GuiViewSettings(object):
         self.thres_adv_frame.grid_rowconfigure(2, weight=10)
         self.thres_adv_frame.grid_rowconfigure(3, weight=10)
 
+    def config_motor_adv_frame_row_col(self):
+        self.motor_adv_frame.grid_columnconfigure(0, weight=1)
+        self.motor_adv_frame.grid_columnconfigure(1, weight=1)
+        self.motor_adv_frame.grid_columnconfigure(2, weight=1)
+        self.motor_adv_frame.grid_columnconfigure(3, weight=1)
+        self.motor_adv_frame.grid_rowconfigure(0, weight=10)
+        self.motor_adv_frame.grid_rowconfigure(1, weight=10)
+        self.motor_adv_frame.grid_rowconfigure(2, weight=10)
+        self.motor_adv_frame.grid_rowconfigure(3, weight=10)
+        self.motor_adv_frame.grid_rowconfigure(4, weight=10)
+
     def forget_layout(self):
         self.settings_frame.place_forget()
 
@@ -438,4 +529,11 @@ class GuiViewSettings(object):
 
     def forget_thres_adv(self):
         self.thres_adv_frame.place_forget()
+
+    def open_motor_adv(self):
+        self.motor_adv_frame.place(anchor="center", rely=0.5, relx=0.5, relheight=0.5, relwidth=0.5)
+        self.motor_adv_frame.focus_set()
+
+    def forget_motor_adv(self):
+        self.motor_adv_frame.place_forget()
 

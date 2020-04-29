@@ -14,8 +14,8 @@ class GuiModel(object):
             baudrate=9600
             com='COM3'
         else:
-            macrostep_time = settings['macrostep_time']
-            baudrate = settings['baud']
+            macrostep_time = int(settings['macrostep_time'])
+            baudrate = int(settings['baud'])
             com = settings['com']
         self.pathname = "data/"
         self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=200,baudrate=baudrate,com=str(com),onSerialFail=onSerialFail)
