@@ -103,17 +103,20 @@ class Camera:
         self.kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
         self.res_d = (424, 512)
         self.res_rgb = (1080, 1920)
-        T = np.array([-.06015, .00221, .02714]).T * 1000
+        T = np.array([-.06015, .00221, .02714]).T * 1.000
         T_hat = np.array([[0, -T[2], T[1]], [T[2], 0, -T[0]], [-T[1], T[0], 0]])
         R = np.array([[.99997, .00715, -.00105], [-.00715, .99995, .00662], [.00110, -.00661, .99998]])
         K_rgb = np.array([[1144.361, 0, 966.359], [0, 1147.337, 548.038], [0, 0, 1]])
         K_d = np.array([[388.198, 0, 253.270], [0, 389.033, 213.934], [0, 0, 1]])
 
         F = np.linalg.inv(K_d).T @ T_hat @ R @ np.linalg.inv(K_rgb)
-        P_rgb = K_rgb @ np.concatenate((np.eye(3), np.reshape(-2.1 * T, (3, 1))), axis=1)
-        P_d = K_d @ np.concatenate((np.eye(3), np.reshape(-1.1 * T, (3, 1))), axis=1)
-        self.focus_depth = 660.
+        P_rgb = K_rgb @ np.concatenate((np.eye(3), np.reshape(-1* T, (3, 1))), axis=1)
+        P_d = K_d @ np.concatenate((np.eye(3), np.reshape(0*T, (3, 1))), axis=1)
+        print(P_d)
+        print(P_rgb)
+        self.focus_depth = .889
         center_points = np.array([P_rgb @ np.array([0, 0, self.focus_depth, 1]), P_d @ np.array([0, 0, self.focus_depth, 1])])
+        print(center_points)
         center_points = np.array(
             [center_points[0, :2] / center_points[0, 2], center_points[1, :2] / center_points[1, 2]])
         [self.scale_x, self.scale_y, self.crop_x, self.crop_y, self.shift_rgb, self.shift_d] = getCropScaleFromK(self.res_rgb, self.res_d, K_rgb, K_d,
@@ -131,8 +134,10 @@ class Camera:
         # depthFrame = depthFrame[int(crop[1,0,1]):int(crop[1,1,1]),:]
         # depth_image = cv2.resize(depthFrame,(len(colorFrame[0]),len(colorFrame)))
         depth_image = reshapeImage(depthFrame, self.scale_x, self.scale_y, self.crop_x, self.crop_y, self.shift_d)
-        cv2.imwrite(path + 'color/color_' + str(num) + '.png', colorFrame[:, :, 0:3])
-        cv2.imwrite(path + 'depth/Depth_' + str(num) + '.png', depth_image.astype(np.uint16))
+        if not cv2.imwrite(path + 'color/color_' + str(num) + '.png', colorFrame[:, :, 0:3]):
+            raise Exception("could not save picture")
+        if not cv2.imwrite(path + 'depth/Depth_' + str(num) + '.png', depth_image.astype(np.uint16)):
+            raise Exception("could not save picture")
         if show_image:
             cv2.imshow('color', colorFrame)
             cv2.imshow('depth', depth_image)

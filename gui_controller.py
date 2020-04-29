@@ -302,7 +302,7 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data', get_images=True, Threshold_images=False,Stitch_images=False):
+    def run_system(self, img_path='data/', get_images=True, Threshold_images=False,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()
