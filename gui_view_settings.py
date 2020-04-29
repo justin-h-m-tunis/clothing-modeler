@@ -151,7 +151,7 @@ class GuiViewSettings(object):
 
     def create_param_xmin_label(self):
         self.param_xmin_label = tk.Label(self.thres_frame, bg="white", fg=WIN_BG_COLOR,
-            font="Ubuntu 12", state="normal", relief="flat", text="Left")
+            font="Ubuntu 12", state="normal", relief="flat", text="Horizontal (%)")
         return self.param_xmin_label
 
     def create_param_xmin_entry(self):
@@ -404,8 +404,8 @@ class GuiViewSettings(object):
         self.thres_widgets =    [
                                 self.create_param_thres_slider(),
                                 self.create_thres_preview(),
-                                self.create_param_xmax_entry(),
-                                self.create_param_xmax_label(),
+                                # self.create_param_xmax_entry(),
+                                # self.create_param_xmax_label(),
                                 self.create_param_xmin_entry(),
                                 self.create_param_xmin_label(),
                                 self.create_param_ymax_entry(),
@@ -489,10 +489,10 @@ class GuiViewSettings(object):
         # setup widgets in thres frame
         self.param_thres_slider.grid(row=1, column=0, columnspan=4, padx=22, pady=0, ipady=0, sticky="we")
         self.thres_source_img_label.grid(row=0, column=0, padx=0, pady=0, ipady=0, sticky="snwe")
-        self.param_xmin_label.grid(row=2, column=0, columnspan=1, pady=0, padx=(10, 0))
-        self.param_xmin_entry.grid(row=2, column=1, columnspan=1, pady=0, padx=(0, 10))
-        self.param_xmax_label.grid(row=2, column=2, columnspan=1, pady=0, padx=(10, 0))
-        self.param_xmax_entry.grid(row=2, column=3, columnspan=1, pady=0, padx=(0, 18))
+        self.param_xmin_label.grid(row=2, column=0, columnspan=3, pady=0, padx=(10, 0), sticky="s")
+        self.param_xmin_entry.grid(row=2, column=3, columnspan=1, pady=0, padx=(0, 15), sticky="s")
+        # self.param_xmax_label.grid(row=2, column=2, columnspan=1, pady=0, padx=(10, 0))
+        # self.param_xmax_entry.grid(row=2, column=3, columnspan=1, pady=0, padx=(0, 18))
         self.param_ymin_label.grid(row=3, column=0, columnspan=1, pady=0, padx=(10, 0))
         self.param_ymin_entry.grid(row=3, column=1, columnspan=1, pady=0, padx=(0, 10))
         self.param_ymax_label.grid(row=3, column=2, columnspan=1, pady=0, padx=(10, 0))

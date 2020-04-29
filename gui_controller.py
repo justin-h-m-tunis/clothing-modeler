@@ -170,9 +170,9 @@ class GuiController(object):
             return True
         if (crop_bottom < 0 or crop_bottom > height):
             return True
-        if (crop_left < 0 or crop_left > width):
+        if (crop_left < 0 or crop_left >= width/2 - 5):
             return True
-        if (crop_right < 0 or crop_right > width):
+        if (crop_right < 0 or crop_right <= width/2 - 5):
             return True
         if (crop_left >= crop_right or crop_top >= crop_bottom):
             return True
@@ -202,27 +202,29 @@ class GuiController(object):
         return (depth_result, rgb_result)
 
     '''checks thresholding preview entry errors'''
-    def parse_crop_params(self):
-        crop_left_str = self.view.settings_panel.param_xmin_entry.get()
-        crop_right_str = self.view.settings_panel.param_xmax_entry.get()
+    def parse_crop_params2(self, im):
+        crop_horizontal_str = self.view.settings_panel.param_xmin_entry.get()
         crop_top_str = self.view.settings_panel.param_ymin_entry.get()
         crop_bottom_str = self.view.settings_panel.param_ymax_entry.get()
         settings = np.load(self.settings_path)
+        width, height = im.size
 
-        if (crop_left_str == ''):
+        crop_left = -1
+        crop_right = -1
+        if (crop_horizontal_str == ''):
             if settings["xmin_left"] == '':
-                crop_left_result = -1
+                crop_horizontal_result = -1
             else:
-                crop_left_result = int(settings["xmin_left"])
+                crop_horizontal_result = int(settings["xmin_left"])
+                to_crop = int(width * ((crop_horizontal_result/100)/2))
+                crop_left = to_crop
+                crop_right = width - to_crop
         else:
-            crop_left_result = int(crop_left_str)
-        if (crop_right_str == ''):
-            if settings["xmax_right"] == '':
-                crop_right_result = -1
-            else:
-                crop_right_result = int(settings["xmax_right"])
-        else:
-            crop_right_result = int(crop_right_str)
+            crop_horizontal_result = int(float(crop_horizontal_str))
+            to_crop = int(width * ((crop_horizontal_result/100)/2))
+            crop_left = to_crop
+            crop_right = width - to_crop
+        
         if (crop_top_str == ''):
             if settings["ymin_top"] == '':
                 crop_top_result = -1
@@ -237,7 +239,8 @@ class GuiController(object):
                 crop_bottom_result = int(settings["ymax_bottom"])
         else:
             crop_bottom_result = int(crop_bottom_str)
-        return (crop_left_result, crop_right_result, crop_top_result, crop_bottom_result)
+            
+        return [crop_left, crop_right, crop_top_result, crop_bottom_result]
 
     def img_thres(self, rgb_output_path=None, depth_output_path=None, img_ind=0):
         curr_dirname = os.path.dirname(__file__)
@@ -264,11 +267,10 @@ class GuiController(object):
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
-        (crop_left, crop_right, crop_top, crop_bottom) = self.parse_crop_params()
-
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
             im = Image.open(rgb_output_path + f[0])
+            [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
                 im2.save(rgb_output_path + f[0])
@@ -277,6 +279,7 @@ class GuiController(object):
         if depth_output_path is not None:
             cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
             im = Image.open(depth_output_path + f[0])
+            [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
                 im2.save(depth_output_path + f[0])
@@ -342,8 +345,8 @@ class GuiController(object):
         self.view.settings_panel.param_thres_slider.set(data["sensitivity"])
         self.view.settings_panel.param_xmin_entry.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_xmin_entry.insert(0, data["xmin_left"])
-        self.view.settings_panel.param_xmax_entry.delete(0, MAX_CHAR_LEN)
-        self.view.settings_panel.param_xmax_entry.insert(0, data["xmax_right"])
+        # self.view.settings_panel.param_xmax_entry.delete(0, MAX_CHAR_LEN)
+        # self.view.settings_panel.param_xmax_entry.insert(0, data["xmax_right"])
         self.view.settings_panel.param_ymin_entry.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_ymin_entry.insert(0, data["ymin_top"])
         self.view.settings_panel.param_ymax_entry.delete(0, MAX_CHAR_LEN)
@@ -437,7 +440,7 @@ class GuiController(object):
         distance = self.view.settings_panel.param_distance_entry.get()
         sensitivity = self.view.settings_panel.param_thres_slider.get()
         xmin_left = self.view.settings_panel.param_xmin_entry.get()
-        xmax_right = self.view.settings_panel.param_xmax_entry.get()
+        # xmax_right = self.view.settings_panel.param_xmax_entry.get()
         ymin_top = self.view.settings_panel.param_ymin_entry.get()
         ymax_bottom = self.view.settings_panel.param_ymax_entry.get()
         baud = 9600
@@ -495,7 +498,7 @@ class GuiController(object):
                     distance=distance,
                     sensitivity=sensitivity,
                     xmin_left=xmin_left,
-                    xmax_right=xmax_right,
+                    # xmax_right=xmax_right,
                     ymin_top=ymin_top,
                     ymax_bottom=ymax_bottom,
                     macrostep_time=macrostep_time,
