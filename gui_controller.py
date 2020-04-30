@@ -106,7 +106,7 @@ class GuiController(object):
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.capture_bg_button.bind("<Leave>",
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_COLOR))
-        self.view.capture_bg_button.bind("<ButtonRelease-1>", self.run_capture_bg)
+        self.view.capture_bg_button.bind("<ButtonRelease-1>", lambda event : self.model.run_motor_camera(img_path='data/bkg/'))
 
     def bind_adv_option(self):
         self.view.adv_option.bind("<Enter>",
@@ -127,7 +127,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.test_spin_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda event : self.model.run_motor_camera(img_path='data/bkg'))
+        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda event: self.model.motor.fullRotation())
 
     def bind_camera_adv_option(self):
         self.view.settings_panel.camera_adv.bind("<Enter>",
@@ -263,26 +263,30 @@ class GuiController(object):
         print("Processing image " + str(img_ind))
         # pull parameters from settings/preview panel
         (depth_thresh, rgb_thresh) = self.parse_thres_depth_rgb_dist()
-
-        img_names = [os.listdir(img_path), os.listdir(depth_path)]
-        f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
-        img = cv2.imread(img_path + f[0])
-        depth = cv2.imread(depth_path + f[1])
-        dist = getBkgDistances(img,depth,cv2.imread(bkg_path + f[0]),cv2.imread(depth_bkg_path + f[1]))
-        bkg_thresh_rgb = removeBkg(img,dist)
-        bkg_thresh_depth = removeBkg(depth,dist)
+        im = Image.open(rgb_output_path + 'color_1.png')
+        [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
+        w = crop_right - crop_left
+        h = crop_bottom - crop_top
+        ims = np.zeros((h,w,3,25))
+        depths = np.zeros((h,w,25))
+        bkgs = np.zeros((h,w,3,25))
+        bkgdepths = np.zeros((h,w,25))
+        if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+            for i in range(25):
+                print(i)
+                f = ['color_' + str(4*i) + '.png','Depth_' + str(4*i) + '.png']
+                ims[:,:,:,i] = cv2.imread(img_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
+                depths[:,:,i] = cv2.imread(depth_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right]
+                bkgs[:,:,:,i] = cv2.imread(bkg_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
+                bkgdepths[:,:,i] = cv2.imread(depth_bkg_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right]
+        bkg_thresh_rgb = removeBkg(ims.astype(np.uint8),depths,bkgs.astype(np.uint8),bkgdepths)
+        bkg_thresh_depth = removeBkg(ims,depths,bkgs,bkgdepths, optimize=False)
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
-            im = Image.open(rgb_output_path + f[0])
-            [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
-            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
-                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
-                im2.save(rgb_output_path + f[0])
-            else:
-                print("crop dimension error! showing original image")
+            print("crop dimension error! showing original image")
         if depth_output_path is not None:
             cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
             im = Image.open(depth_output_path + f[0])
@@ -302,7 +306,7 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data/', get_images=True, Threshold_images=False,Stitch_images=False):
+    def run_system(self, img_path='data/', get_images=False, Threshold_images=True,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()
@@ -321,7 +325,7 @@ class GuiController(object):
                 return
         if Threshold_images:
             for i in range(settings['macrosteps']):
-                self.img_thres(rgb_output_path='data/color',depth_output_path='data/depth',img_ind=i)
+                self.img_thres(rgb_output_path='data/color_thresholded',depth_output_path='data/depth_thresholded',img_ind=i)
         if Stitch_images:
             pass
 
@@ -329,6 +333,7 @@ class GuiController(object):
     def run_capture_bg(self, event):
         print("3D scanning system start: capture bg")
         self.view.manage_settings(self.parent, False)
+
         pass
 
     '''export settings file to a disk location'''
