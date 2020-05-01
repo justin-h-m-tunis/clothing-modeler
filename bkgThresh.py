@@ -4,6 +4,7 @@ import scipy.optimize
 from scipy.ndimage.filters import *
 import os
 import pickle
+from numpy import tensordot as td
 
 def getBkgDistances(img, im_depth, bkg, bkg_depth,gaussian_kernel=(5,5)):
     im_blur = cv2.GaussianBlur(img,gaussian_kernel,0)
@@ -48,17 +49,27 @@ def convolutionFn(I1,h):
 
 #inputs = hdist, sdist, vdist, ddist, depthmask,backdropmask, filters = gaussian* (x,y,z grad, 3d laplacian)
 def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),backdrop_hsv_range=((136,47,18),(198,58,94))):
+    for i in range(3):
+        ims[:,:,i,:] = gaussian_filter(ims[:, :, i, :], 1)
+        bkgs[:,:,i,:] = gaussian_filter(bkgs[:,:,i,:],1)
+    depths[:, :, :] = gaussian_filter(depths[:, :, :], 1)
+    bkgdepths[:, :, :] = gaussian_filter(bkgdepths[:, :, :], 1)
+
     depth_scale = np.max([np.max(depths),np.max(bkgdepths)])
-    responses = np.zeros((len(ims),len(ims[0]),8,np.size(ims,3)))
-    for i in range(np.size(ims,3)):
-        print(ims[:,:,:,i])
+    responses = np.zeros((len(ims),len(ims[0]),6,np.shape(ims)[3]))
+    print("computing responses")
+    for i in range(np.shape(ims)[3]):
         hsv_ims = cv2.cvtColor(ims[:, :, :, i], cv2.COLOR_BGR2HSV)
         hsvdist = np.tanh(2*abs(hsv_ims - cv2.cvtColor(bkgs[:,:,:,i],cv2.COLOR_BGR2HSV))/255.0)
         ddist = np.tanh(2*abs(depths[:,:,i].astype(float) - bkgdepths[:,:,i].astype(float))/depth_scale)
         depth_mask = thresholdFn(depths[:,:,i],depthrange[0],depthrange[1])
         backdrop_mask = thresholdFn(hsv_ims,np.array(backdrop_hsv_range[0]),np.array(backdrop_hsv_range[1]))
-        responses[:,:,:,i] = np.array([hsvdist,ddist,backdrop_mask,depth_mask])
-    save_resp = [output, output_uncertainties]
+        responses[:,:,:,i] = np.dstack((hsvdist,
+                                       ddist,
+                                       backdrop_mask,
+                                       depth_mask))
+    print(np.shape(responses))
+    save_resp = responses
     pickle.dump(save_resp, open("responses.pkl", "wb"))
     return responses
 
@@ -76,74 +87,102 @@ def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),backdrop_hsv_ra
     return responses
 '''
 def getOutput(responses,weights,biases):
-    n_images = np.size(responses,3)
-    n_filters = np.size(responses,2)
-    obj_means = [np.sum(responses[:,:,:,i] * weights[0,:],axis=2) + biases for i in range(size(responses,2))]
-    obj_uncertainties = [np.linalg.norm(sqrt(n_filters/(n_filters-1))*np.linalg.norm((responses[:,:,:,i]-obj_means) * weights[0,:]),axis=2) for i in range(size(responses,2))]
-    bkg_means = [np.sum(responses[:, :, :, i] * weights[1, :], axis=2) + biases for i in range(size(responses, 2))]
-    bkg_uncertainties = [np.linalg.norm(sqrt(n_filters / (n_filters - 1)) * np.linalg.norm((responses[:, :, :, i] - obj_means) * weights[1, :]), axis=2) for i in range(size(responses, 2))]
-    output = np.array([obj_means,bkg_means])
-    output_uncertainties =np.array([obj_uncertainties,bkg_uncertainties])
-    save_out = [output,output_uncertainties]
+    print("Getting Weighted Outputs")
+    n_images = np.shape(responses)[3]
+    n_filters = np.shape(responses)[2]
+    x_ = np.sum(responses,axis=(2,3))/(n_images*n_filters)
+    W_ = np.sum(weights,axis=1)
+    obj_means = np.dstack((np.sum((responses[:,:,:,i] + biases) * weights[0,:],axis=2) for i in range(np.shape(responses)[3])))/W_[0]
+    bkg_means = np.dstack((np.sum((responses[:, :, :, i] + biases) * weights[1, :], axis=2) for i in range(np.shape(responses)[3])))/W_[1]
+    obj_uncertainties = np.dstack((np.sqrt(n_filters/(n_filters-1))*np.linalg.norm(np.moveaxis(np.moveaxis(responses[:,:,:,i],2,0)-x_,0,2)**2 * weights[0,:] ** 2,axis=2) for i in range(np.shape(responses)[3])))/W_[0]
+    bkg_uncertainties = np.dstack((np.sqrt(n_filters / (n_filters - 1)) * np.linalg.norm(np.moveaxis(np.moveaxis(responses[:, :, :, i],2,0) - x_,0,2)**2 * weights[1, :] ** 2, axis=2) for i in range(np.shape(responses)[3])))/W_[1]
+
+    output = np.stack((obj_means,bkg_means),axis=3)
+    output_uncertainties = np.stack((obj_uncertainties,bkg_uncertainties),axis=3)
+    save_out = np.stack((output,output_uncertainties),axis=4)
     pickle.dump(save_out, open("mean_uncertainties.pkl", "wb"))
     return output,output_uncertainties
 
 def sigmoid(x):
-    np.power(1-np.power(e,-x),-1)
+    return np.power(1+np.power(np.e,-x),-1)
 
 def calculateLoss(output,uncertainties):
         #number of uncertain pixels
-    loss = np.tile(sigmoid(abs(output[:,:,:,0]-output[:,:,:,1]) - np.sum(uncertainties,axis=2)),(1,1,1,2))
+    loss = sigmoid(abs(output[:,:,:,0]-output[:,:,:,1]) - np.sum(uncertainties,axis=3))
     return loss
 
 def getDerivs(weights, biases, responses, output, uncertainties):
-    n = np.size(responses,3)
-    h = np.size(responses,0)
-    w = np.size(responses,1)
-    channels = np.size(responses,2)
-    grad_w = np.zeros(np.shape(weights)) #2xf
-    grad_b = np.zeros(np.shape(biases)) #f
+    print("Determining Gradients")
+    n = np.shape(responses)[3]
+    h = np.shape(responses)[0]
+    w = np.shape(responses)[1]
+    W_ = np.sum(weights,axis=1)
+    channels = np.shape(responses)[2]
     L = calculateLoss(output,uncertainties)
-    dLdx = L*(1-L) #DDnx2
-    dxdo = -2*((output == np.max(output,axis=2)).astype(float)-.5) #DDnx2
-    dxds = np.array([-1,-1])
-    c = np.sum(responses,axis=3)
-    dodw = c/n #DDnxf
-    dsdw = n/(n+1)*((c-output) @ (dodw*weights ** 2) + weights*(c-output) ** 2)/uncertainties #DDnxf
-    dodb = np.ones(np.shape(dodw))
-    dsdb = n/(n+1)*((c-output) @ weights ** 2)/uncertainties #DDnx1
+    print(np.max(responses),np.max(output),np.max(uncertainties),np.max(L))
 
-    grad_w = np.reshape(np.swapaxis(dLdx * dxdo,2,3),(h*w*n,2)) @ np.reshape(np.swapaxis(dodw,2,3),(h*w*n,channels)).T + np.reshape(np.swapaxis(dLdx * dxds,2,3),(h*w*n,2)) @ np.reshape(np.swapaxis(dsdw,2,3),(h*w*n,channels)).T
-    grad_b = np.reshape(np.swapaxis(dLdx * dxdo,2,3),(h*w*n,2)) @ np.reshape(np.swapaxis(dodb,2,3),(h*w*n,channels)).T + np.reshape(np.swapaxis(dLdx * dxds,2,3),(h*w*n,2)) @ np.reshape(np.swapaxis(dsdb,2,3),(h*w*n,channels)).T
-    return grad_w,grad_b
+    dLdf = L*(1-L) #1xDDn #1x1
+    dfdu = 2*np.equal(output,np.tile(np.expand_dims(np.max((output),axis=3),3),(1,1,1,2)),dtype=float)-1 #DDnx2 #1x2
+    dfds = np.array([-1,-1]) # 1x2
+    x = np.swapaxes(responses,2,3) + biases
+    x_ = np.sum(x,axis=(3))/channels
+    x_diff = np.moveaxis(np.tile(np.moveaxis(np.moveaxis(x,3,0) - x_,0,3),(2,1,1,1,1)),0,-1)
+    dudw = (x+biases)/n #DDnxf #1xf
+    dsdw = np.moveaxis(n/(n-1)*np.moveaxis(weights.T * (x_diff ** 2),3,0)/(uncertainties*W_**2),0,3) #DDnx2xf, 2xf
+    dudb = weights #2xf
+    dsdb = np.moveaxis(n/(n-1)*np.moveaxis(weights.T**2 * x_diff * (1-1/channels),3,0)/(uncertainties*W_**2),0,3) #DDnx2xf, 2xf
 
-def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=100,learning_rate = .001):
-    in_size = 8
+    dLdf = np.reshape(dLdf,(1,h*w*n))
+    dfdu = np.reshape(dfdu,(h*w*n,2))
+    dudw = np.reshape(dudw, (h * w * n, channels))
+    dsdw = np.reshape(np.swapaxes(dsdw,3,4), (h * w * n, 2, channels))
+    dsdb = np.reshape(np.swapaxes(dsdb,3,4), (h*w*n,2,channels))
+
+    #print(np.max(dLdf),np.max(dfdu),np.max(dfds),np.max(dudw),np.max(dsdw),np.max(dudb),np.max(dsdb))
+
+    grad_w = ((dLdf.T*dfdu).T @ dudw + np.sum((dLdf.T @ np.expand_dims(dfds,0)) * np.moveaxis(dsdw,2,0),axis=1).T)/np.size(dLdf)
+    grad_b = (dLdf @ (dfdu @ dudb) - dLdf @ np.sum(dsdb,axis=1))/np.size(dLdf)
+    return np.reshape(grad_w,(2,6)),np.reshape(grad_b,(6))
+
+ ## not terrible weights: [[ 0.63047816  0.05227725 -0.46316327  0.62588872 -0.43291542  0.73123184]
+ #[-0.75273859 -0.17357586 -0.80692281  0.48178903 -0.76356912 -0.76175928]] [ 0.02398244 -0.00168372  0.00998617 -0.06937236 -0.00429752 -0.08155093]
+def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .1, starting_weights=None, starting_biases=None):
+    in_size = 6
     out_size = 2
-    W = np.random.uniform(-np.sqrt(6/(in_size+out_size)),np.sqrt(6/(in_size + out_size)),out_size*in_size)
-    W = np.reshape(W,(in_size,out_size))
-    b = np.zeros(out_size) #might need to init to .5
+    if starting_weights is None:
+        W = np.random.uniform(0,np.sqrt(6/(in_size + out_size)),out_size*in_size)
+        W = np.reshape(W,(out_size,in_size))
+        #W[0,:] *= -1
+    else:
+        W = starting_weights
+    if starting_biases is None:
+        b = np.zeros(in_size) #might need to init to .5
+    else:
+        b = starting_biases
     print(W,b)
     for i in range(epochs):
         print(i)
         responses = getResponses(ims, depths, bkgs, bkgdepths)
         [means, uncertainties] = getOutput(responses, W, b)
-        cv2.imshow("mask",(1-np.argmin(means,axis=2))*255)
+        print((np.argmin(means[:,:,0,:],axis=2)))
+        cv2.imshow("mask",((np.argmin(means[:,:,0,:],axis=2))*255).astype(np.uint8))
+        cv2.waitKey(1)
         [dW, db] = getDerivs(W,b,responses,means,uncertainties)
+        print(dW,db)
         W -= dW*learning_rate
+        #W /= .5*np.sum(abs(W))
         b -= db*learning_rate
         print(W,b)
-        cv2.waitKey(1)
     return W,b
 
 def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True):
     if optimize:
         weights, biases = optimizeWeights(ims,depths,bkgs,bkgdepths)
     else:
-        weights = np.zeros((2,8))
-        biases = np.zeros((1,8))
+        weights = np.zeros((2,6))
+        biases = np.zeros((1,6))
     responses = getResponses(ims, depths, bkgs, bkgdepths)
-    [means, uncertainties] = getOutput(responses, W, b)
+    [means, uncertainties] = getOutput(responses, weights, biases)
     mask = (1 - np.argmin(means, axis=2)).astype(bool)
     cv2.imshow("mask", (1 - np.argmin(means, axis=2)) * 255)
     '''tanh_dist = np.tanh(dist)
@@ -156,7 +195,7 @@ def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True):
     mask = ~(cv2.GaussianBlur((mask).astype(np.uint8),gaussian_kernel,0).astype(bool))
     cv2.imshow("mask", mask.astype(np.uint8)*255)
     '''
-    obj = np.ma.array(img,mask=np.repeat(mask,np.size(img,axis=2)))
+    obj = np.ma.array(img,mask=np.repeat(mask,np.shape(img)[2]))
     cv2.waitKey(1)
     return obj.filled(0)
 '''

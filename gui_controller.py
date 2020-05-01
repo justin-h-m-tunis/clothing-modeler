@@ -267,14 +267,15 @@ class GuiController(object):
         [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
         w = crop_right - crop_left
         h = crop_bottom - crop_top
-        ims = np.zeros((h,w,3,25))
-        depths = np.zeros((h,w,25))
-        bkgs = np.zeros((h,w,3,25))
-        bkgdepths = np.zeros((h,w,25))
+        sample_num = 10
+        ims = np.zeros((h,w,3,sample_num))
+        depths = np.zeros((h,w,sample_num))
+        bkgs = np.zeros((h,w,3,sample_num))
+        bkgdepths = np.zeros((h,w,sample_num))
         if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
-            for i in range(25):
+            for i in range(sample_num):
                 print(i)
-                f = ['color_' + str(4*i) + '.png','Depth_' + str(4*i) + '.png']
+                f = ['color_' + str(int(200/sample_num*i)) + '.png','Depth_' + str(int(200/sample_num*i)) + '.png']
                 ims[:,:,:,i] = cv2.imread(img_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
                 depths[:,:,i] = cv2.imread(depth_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right]
                 bkgs[:,:,:,i] = cv2.imread(bkg_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
