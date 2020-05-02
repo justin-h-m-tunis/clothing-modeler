@@ -271,12 +271,13 @@ class GuiController(object):
         tmp = cv2.imread(img_path + 'color_1.png')
         w = crop_right - crop_left
         h = crop_bottom - crop_top
-        if(os.path.isfile('ims_bulk.pkl')):
+        optimize=False
+        if(os.path.isfile('ims_bulk.pkl')) and False:
             ims = pickle.load(open('ims_bulk.pkl',"rb"))
             bkgs = pickle.load(open('bkgs_bulk.pkl',"rb"))
             depths = pickle.load(open('depths_bulk.pkl', "rb"))
             bkgdepths = pickle.load(open('bkgdepths_bulk.pkl',"rb"))
-        else:
+        elif optimize:
             sample_num = 10
             ims = np.zeros((h,w,3,sample_num))
             depths = np.zeros((h,w,sample_num))
@@ -294,37 +295,33 @@ class GuiController(object):
             pickle.dump(bkgs,open("bkgs_bulk.pkl", "wb"))
             pickle.dump(depths,open("depths_bulk.pkl", "wb"))
             pickle.dump(bkgdepths,open("bkgdepths_bulk.pkl", "wb"))
-
-        weights, biases = removeBkg(ims.astype(np.uint8),depths,bkgs.astype(np.uint8),bkgdepths, optimize=True)
-        print(weights,biases)
-        return None
+            weights, biases = removeBkg(ims.astype(np.uint8),depths,bkgs.astype(np.uint8),bkgdepths, optimize=True)
+            print(weights,biases)
         f = ['color_' + str(img_ind) + '.png', 'Depth_' + str(img_ind) + '.png']
-        ims = np.expand_dims(cv2.imread(img_path + f[0]),3)
-        depths = np.expand_dims(cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH),2)
-        bkgs = np.expand_dims(cv2.imread(bkg_path + f[0]),3)
-        bkgdepths = np.expand_dims(cv2.imread(depth_bkg_path + f[1], cv2.IMREAD_ANYDEPTH),2)
-        bkg_thresh_rgb, bkg_thresh_depth = removeBkg(ims.astype(np.uint8), depths, bkgs.astype(np.uint8), bkgdepths, optimize=False)
+        im = cv2.imread(img_path + f[0])[crop_top:crop_bottom,crop_left:crop_right, :]
+        depth = cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom,crop_left:crop_right]
+        bkg_thresh_rgb, bkg_thresh_depth = removeBackgroundThreshold(im.astype(np.uint8), depth,(700,1270),'backdrop.png','mannequin.png')
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
-            im = Image.open(rgb_output_path + f[0])
+            '''im = Image.open(rgb_output_path + f[0])
             [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
                 im2.save(rgb_output_path + f[0])
             else:
-                print("crop dimension error! showing original image")
+                print("crop dimension error! showing original image")'''
         if depth_output_path is not None:
             cv2.imwrite(depth_output_path + f[1], bkg_thresh_depth)
-            im = Image.open(depth_output_path + f[1])
+        '''im = Image.open(depth_output_path + f[1])
             [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
                 im2.save(depth_output_path + f[1])
             else:
-                print("crop dimension error! showing original image")
+                print("crop dimension error! showing original image")'''
         self.view.settings_panel.refresh_preview()
         print("done!")
 
@@ -335,7 +332,7 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data/', get_images=True, Threshold_images=False,Stitch_images=False):
+    def run_system(self, img_path='data/', get_images=False, Threshold_images=True,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()

@@ -29,25 +29,20 @@ def mahalaobisDist(im, mean, cov):
 
 def thresholdFn(I1, lb=0, ub=0,mean=None,cov=None, direction="inclusive", dist='linear'):
     if direction=="inclusive":
-        '''if(len(np.shape(I1))==3):
-            return ((I1 > lb) & (I1 < ub)).all(axis=2).astype(float)
-        else:
-            return ((I1 > lb) & (I1 < ub)).astype(float)'''
-        if dist=='linear':
+        if dist=='step':
+            return ((I1 > lb) & (I1 < ub)).astype(float)
+        elif dist=='linear':
             return sigmoid(np.min(np.dstack((I1-lb,ub-I1)),axis=2))
         else:
-            return multivariate_normal.pdf(I1,mean,cov)
+            I1 = I1 / 255
+            return 1-chi2.cdf(mahalaobisDist(I1, mean, cov), 3)
     else:
-        '''if(len(np.shape(I1))==3):
+        if dist=='step':
             return ((I1 < lb) | (I1 > ub)).all(axis=2).astype(float)
-        else:
-            return ((I1 < lb) | (I1 > ub)).astype(float)
-            '''
-        if dist=='linear':
+        elif dist=='linear':
             return sigmoid(np.max(np.dstack((lb-I1,I1-ub)),axis=2))
         else:
             I1 = I1/255
-            #probs = multivariate_normal.pdf(I1, mean, cov)
             return chi2.cdf(mahalaobisDist(I1,mean,cov),3)
 
 def convolutionFn(I1,h):
@@ -66,15 +61,16 @@ def convolutionFn(I1,h):
 # but hey at least realizing this will make it better
 
 #inputs = hdist, sdist, vdist, ddist, depthmask,backdropmask, filters = gaussian* (x,y,z grad, 3d laplacian)
-def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_mean=None,bk_cov=None):
+def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_colors=None, man_colors=None):
     for i in range(3):
         ims[:,:,i,:] = gaussian_filter(ims[:, :, i, :], (1,1,0))
         bkgs[:,:,i,:] = gaussian_filter(bkgs[:,:,i,:],(1,1,0))
     depths[:, :, :] = gaussian_filter(depths[:, :, :], (1,1,0))
     bkgdepths[:, :, :] = gaussian_filter(bkgdepths[:, :, :], (1,1,0.1))
 
+    num_filters = 7
     depth_scale = np.max([np.max(depths),np.max(bkgdepths)])
-    responses = np.zeros((len(ims),len(ims[0]),6,np.shape(ims)[3]))
+    responses = np.zeros((len(ims),len(ims[0]),num_filters,np.shape(ims)[3]))
     print("computing responses")
     for i in range(np.shape(ims)[3]):
         cv2.imshow("ims",ims[:,:,:,i])
@@ -86,11 +82,16 @@ def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_mean=None,bk
         cv2.imshow("ddist",(255*ddist).astype(np.uint8))
         depth_mask = thresholdFn(depths[:,:,i],lb=depthrange[0],ub=depthrange[1])
         cv2.imshow("d mask",(255*depth_mask).astype(np.uint8))
-        backdrop_mask = thresholdFn(hsv_ims,mean=bk_mean,cov=bk_cov, direction='exclusive', dist='normal')
+        backdrop_mask = thresholdFn(hsv_ims,mean=bk_colors[0],cov=bk_colors[1], direction='exclusive', dist='normal')
+        print(backdrop_mask)
         cv2.imshow("bkg mask",(255*backdrop_mask).astype(np.uint8))
+        mannequin_mask = thresholdFn(hsv_ims, mean=man_colors[0], cov=man_colors[1], direction='exclusive', dist='normal')
+        print(mannequin_mask)
+        cv2.imshow("man mask", (255 * mannequin_mask).astype(np.uint8))
         responses[:,:,:,i] = np.dstack((hsvdist,
                                        ddist,
                                        backdrop_mask,
+                                       mannequin_mask,
                                        depth_mask))
         cv2.waitKey(1)
     return responses
@@ -170,12 +171,12 @@ def getDerivs(weights, biases, responses, output, uncertainties):
 
     grad_w = ((dLdf.T*dfdu).T @ dudw + np.sum((dLdf.T @ np.expand_dims(dfds,0)) * np.moveaxis(dsdw,2,0),axis=1).T)/np.size(dLdf)
     grad_b = (dLdf @ (dfdu @ dudb) - dLdf @ np.sum(dsdb,axis=1))/np.size(dLdf)
-    return np.reshape(grad_w,(2,6)),np.reshape(grad_b,(6))
+    return np.reshape(grad_w,(2,channels)),np.reshape(grad_b,(channels))
 
- ## not terrible weights:[[-0.02310255 -0.09239055 -0.04196529 -0.03325345 -0.12176202 -0.00874592]
- #[-0.06079465  0.00337789 -0.02507019 -0.0489201  -0.10368871 -0.08661218]] [ 0.13654664  0.11183966  0.17248183  0.22858321 -0.01380614  0.10985678]
-def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, starting_weights=None, starting_biases=None, bk_mean=None, bk_cov=None):
-    in_size = 6
+ ## not terrible weights:[-0.23539651 -0.20197062 -0.03738734 -0.9411517  -0.77748915 -0.65677627
+ # -0.32563077]] [ 0.34155395  0.20720649  0.19224365  1.29058724 -0.0726096   0.01480159  0.31051498]
+def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, starting_weights=None, starting_biases=None):
+    in_size = 7
     out_size = 2
     if starting_weights is None:
         in_size = 6
@@ -191,10 +192,11 @@ def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, sta
     else:
         b = starting_biases
     print(W,b)
-    responses = getResponses(ims, depths, bkgs, bkgdepths, bk_mean=bk_mean, bk_cov=bk_cov)
+    responses = getResponses(ims, depths, bkgs, bkgdepths, bk_colors=analyzeBackdrop('backdrop.png'), man_colors=analyzeBackdrop('mannequin.png'))
     for i in range(epochs):
         print(i)
         [means, uncertainties] = getOutput(responses, W, b)
+        print(means[:,:,0,:],means[:,:,1,:])
         cv2.imshow("mask",(np.argmin(means[:,:,0,:],axis=2)).astype(np.float))
         cv2.waitKey(1)
         [dW, db] = getDerivs(W,b,responses,means,uncertainties)
@@ -205,11 +207,7 @@ def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, sta
         print(W,b)
     return W,b
 
-def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None):
-    b0 = np.array([ 0.27433597,  0.18717923 , 0.17323259,  0.97169975, -0.10707744,  0.24528569])
-    W0 = np.array([[ 0.575848,   0.09548454 , 0.22955949 , 0.78463556,  0.71672132 , 0.56989626],
-                    [-0.23533103, -0.19698118 ,-0.04199131 ,-0.75826699, -0.75890685, -0.33609552]])
-
+def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None, ):
     if os.path.isfile('bk_mean.pkl'):
         bk_mean = pickle.load(open('bk_mean.pkl',"rb"))
         bk_cov = pickle.load(open('bk_cov.pkl','rb'))
@@ -218,7 +216,7 @@ def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None):
     else:
         bk_mean, bk_cov = analyzeBackdrop('backdrop.png')
     if optimize:
-        weights, biases = optimizeWeights(ims,depths,bkgs,bkgdepths, starting_weights=W0,starting_biases=b0,bk_mean=bk_mean,bk_cov=bk_cov)
+        weights, biases = optimizeWeights(ims,depths,bkgs,bkgdepths, starting_weights=W0,starting_biases=b0)
         return weights, biases
     else:
         weights = W0
@@ -234,6 +232,29 @@ def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None):
         obj = np.ma.array(ims[:,:,:,i],mask=np.repeat(np.expand_dims(mask,2),3,axis=2))
         depth_obj = np.ma.array(depths[:,:,i],mask=mask)
     return obj.filled(0), depth_obj.filled(0)
+
+def removeBackgroundThreshold(im,depth, depth_range, bk_path, man_path, bk_confidence=.4, man_confidence=.3):
+    #for i in range(3):
+        #im = cv2.GaussianBlur(im,(5,5),0)
+    #depth = cv2.GaussianBlur(depth, (5,5),0)
+    print("Thresholding Image")
+    hsv_im = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+    depth_mask = thresholdFn(depth, lb=depth_range[0], ub=depth_range[1], dist='step')
+    cv2.imshow("d mask", (255 * depth_mask).astype(np.uint8))
+    bk_colors = analyzeBackdrop(bk_path)
+    backdrop_mask = thresholdFn(hsv_im, mean=bk_colors[0], cov=bk_colors[1], dist='normal')
+    cv2.imshow("bkg mask", (255 * (backdrop_mask > bk_confidence)).astype(np.uint8))
+    man_colors=analyzeBackdrop(man_path)
+    mannequin_mask = thresholdFn(hsv_im, mean=man_colors[0], cov=man_colors[1], dist='normal')
+    cv2.imshow("mannequin mask", (255 * (mannequin_mask > man_confidence)).astype(np.uint8))
+    cv2.waitKey(1)
+
+    mask = ~(depth_mask.astype(bool) & (backdrop_mask < bk_confidence).astype(bool) & (mannequin_mask < man_confidence).astype(bool))
+    cv2.imshow("masku",mask.astype(float))
+    obj = np.ma.array(im, mask=np.repeat(np.expand_dims(mask, 2), 3, axis=2))
+    depth_obj = np.ma.array(depth, mask=mask)
+    return obj.filled(0), depth_obj.filled(0)
+
 '''tanh_dist = np.tanh(dist)
 obj_certainties = np.multiply(tanh_dist,np.array(obj_weights))
 bkg_certainties = np.multiply(tanh_dist,np.array(bkg_weights))
@@ -260,7 +281,6 @@ def analyzeBackdrop(path):
     hsv_cov = np.cov(np.reshape(bkdrop[pix_inds],(len(pix_inds[0]),3)).T)
     pickle.dump(hsv_avg, open("bk_avg.pkl", "wb"))
     pickle.dump(hsv_cov, open("bk_cov.pkl", "wb"))
-    print(hsv_avg,hsv_cov)
     return  hsv_avg, hsv_cov
 
 if __name__ == "__main__":
