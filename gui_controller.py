@@ -13,6 +13,8 @@ from motor_camera import *
 import cv2
 from bkgThresh import *
 from PIL import Image
+import pickle
+import os
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -263,38 +265,64 @@ class GuiController(object):
         print("Processing image " + str(img_ind))
         # pull parameters from settings/preview panel
         (depth_thresh, rgb_thresh) = self.parse_thres_depth_rgb_dist()
-        im = Image.open(rgb_output_path + 'color_1.png')
+        im = Image.open(img_path + 'color_1.png')
         [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
+        print([crop_left, crop_right, crop_top, crop_bottom])
+        tmp = cv2.imread(img_path + 'color_1.png')
         w = crop_right - crop_left
         h = crop_bottom - crop_top
-        sample_num = 10
-        ims = np.zeros((h,w,3,sample_num))
-        depths = np.zeros((h,w,sample_num))
-        bkgs = np.zeros((h,w,3,sample_num))
-        bkgdepths = np.zeros((h,w,sample_num))
-        if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
-            for i in range(sample_num):
-                print(i)
-                f = ['color_' + str(int(200/sample_num*i)) + '.png','Depth_' + str(int(200/sample_num*i)) + '.png']
-                ims[:,:,:,i] = cv2.imread(img_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
-                depths[:,:,i] = cv2.imread(depth_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right]
-                bkgs[:,:,:,i] = cv2.imread(bkg_path + f[0])[crop_top:crop_bottom, crop_left:crop_right,:]
-                bkgdepths[:,:,i] = cv2.imread(depth_bkg_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right]
-        bkg_thresh_rgb = removeBkg(ims.astype(np.uint8),depths,bkgs.astype(np.uint8),bkgdepths)
-        bkg_thresh_depth = removeBkg(ims,depths,bkgs,bkgdepths, optimize=False)
+        if(os.path.isfile('ims_bulk.pkl')):
+            ims = pickle.load(open('ims_bulk.pkl',"rb"))
+            bkgs = pickle.load(open('bkgs_bulk.pkl',"rb"))
+            depths = pickle.load(open('depths_bulk.pkl', "rb"))
+            bkgdepths = pickle.load(open('bkgdepths_bulk.pkl',"rb"))
+        else:
+            sample_num = 10
+            ims = np.zeros((h,w,3,sample_num))
+            depths = np.zeros((h,w,sample_num))
+            bkgs = np.zeros((h,w,3,sample_num))
+            bkgdepths = np.zeros((h,w,sample_num))
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                for i in range(sample_num):
+                    f = ['color_' + str(int(200/sample_num*i)) + '.png','Depth_' + str(int(200/sample_num*i)) + '.png']
+                    print(i, img_path + f[0])
+                    ims[:,:,:,i] = cv2.imread(img_path + f[0])[crop_top:crop_bottom,crop_left:crop_right, :]
+                    depths[:,:,i] = cv2.imread(depth_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom,crop_left:crop_right]
+                    bkgs[:,:,:,i] = cv2.imread(bkg_path + f[0])[crop_top:crop_bottom,crop_left:crop_right, :]
+                    bkgdepths[:,:,i] = cv2.imread(depth_bkg_path + f[1],cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom,crop_left:crop_right]
+            pickle.dump(ims,open("ims_bulk.pkl", "wb"))
+            pickle.dump(bkgs,open("bkgs_bulk.pkl", "wb"))
+            pickle.dump(depths,open("depths_bulk.pkl", "wb"))
+            pickle.dump(bkgdepths,open("bkgdepths_bulk.pkl", "wb"))
+
+        weights, biases = removeBkg(ims.astype(np.uint8),depths,bkgs.astype(np.uint8),bkgdepths, optimize=True)
+        print(weights,biases)
+        return None
+        f = ['color_' + str(img_ind) + '.png', 'Depth_' + str(img_ind) + '.png']
+        ims = np.expand_dims(cv2.imread(img_path + f[0]),3)
+        depths = np.expand_dims(cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH),2)
+        bkgs = np.expand_dims(cv2.imread(bkg_path + f[0]),3)
+        bkgdepths = np.expand_dims(cv2.imread(depth_bkg_path + f[1], cv2.IMREAD_ANYDEPTH),2)
+        bkg_thresh_rgb, bkg_thresh_depth = removeBkg(ims.astype(np.uint8), depths, bkgs.astype(np.uint8), bkgdepths, optimize=False)
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
-            print("crop dimension error! showing original image")
-        if depth_output_path is not None:
-            cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
-            im = Image.open(depth_output_path + f[0])
+            im = Image.open(rgb_output_path + f[0])
             [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
-                im2.save(depth_output_path + f[0])
+                im2.save(rgb_output_path + f[0])
+            else:
+                print("crop dimension error! showing original image")
+        if depth_output_path is not None:
+            cv2.imwrite(depth_output_path + f[1], bkg_thresh_depth)
+            im = Image.open(depth_output_path + f[1])
+            [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
+            if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
+                im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
+                im2.save(depth_output_path + f[1])
             else:
                 print("crop dimension error! showing original image")
         self.view.settings_panel.refresh_preview()
@@ -307,7 +335,7 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data/', get_images=False, Threshold_images=True,Stitch_images=False):
+    def run_system(self, img_path='data/', get_images=True, Threshold_images=False,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()
@@ -326,7 +354,7 @@ class GuiController(object):
                 return
         if Threshold_images:
             for i in range(settings['macrosteps']):
-                self.img_thres(rgb_output_path='data/color_thresholded',depth_output_path='data/depth_thresholded',img_ind=i)
+                self.img_thres(rgb_output_path='data/color_thresholded/',depth_output_path='data/depth_thresholded/',img_ind=i)
         if Stitch_images:
             pass
 
