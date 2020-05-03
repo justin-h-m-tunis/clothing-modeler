@@ -205,6 +205,7 @@ class GuiViewSettings(object):
 
     '''Threashold advanced frame implementations'''
     
+    # old
     def create_hue_weight_label(self):
         self.hue_weight_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
             font="Ubuntu 14", state="normal", relief="flat", text="Hue Weight")
@@ -243,6 +244,56 @@ class GuiViewSettings(object):
             relief="flat", pady=-1, activebackground=CANCEL_BUTTON_FOCUS_COLOR,
             activeforeground=WIN_BG_COLOR)
         return self.close_thres_button
+
+    # new
+
+    def create_similarity_to_backdrop_label(self):
+        self.similarity_to_backdrop_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Similarity to backdrop")
+        return self.similarity_to_backdrop_label
+
+    def create_similarity_to_backdrop_slider(self):
+        self.similarity_to_backdrop_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
+            orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
+            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+        self.similarity_to_backdrop_slider.set(0.5)
+        return self.similarity_to_backdrop_slider
+
+    def create_similarity_to_mannequin_label(self):
+        self.similarity_to_mannequin_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Similarity to mannequin")
+        return self.similarity_to_mannequin_label
+
+    def create_similarity_to_mannequin_slider(self):
+        self.similarity_to_mannequin_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
+            orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
+            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+        self.similarity_to_mannequin_slider.set(0.5)
+        return self.similarity_to_mannequin_slider
+
+    def create_optimize_speed_label(self):
+        self.optimize_speed_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Optimize speed")
+        return self.optimize_speed_label
+
+    def create_optimize_speed_slider(self):
+        self.optimize_speed_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
+            orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
+            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+        self.optimize_speed_slider.set(0.5)
+        return self.optimize_speed_slider
+
+    def create_optimize_quality_label(self):
+        self.optimize_quality_label = tk.Label(self.thres_adv_frame, bg="white", fg=WIN_BG_COLOR,
+            font="Ubuntu 14", state="normal", relief="flat", text="Optimize quality")
+        return self.optimize_quality_label
+
+    def create_optimize_quality_slider(self):
+        self.optimize_quality_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
+            orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
+            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+        self.optimize_quality_slider.set(0.5)
+        return self.optimize_quality_slider
 
 
     '''Motor advanced frame implementations'''
@@ -425,6 +476,15 @@ class GuiViewSettings(object):
                                     self.create_depth_dist_entry(),
                                     self.create_close_thres_button(),
                                     self.create_hue_weight_slider(),
+
+                                    self.create_similarity_to_backdrop_label(),
+                                    self.create_similarity_to_backdrop_slider(),
+                                    self.create_similarity_to_mannequin_label(),
+                                    self.create_similarity_to_mannequin_slider(),
+                                    self.create_optimize_speed_label(),
+                                    self.create_optimize_speed_slider(),
+                                    self.create_optimize_quality_label(),
+                                    self.create_optimize_quality_slider(),
                                     ]
 
         # create motor adv frame widgets
@@ -501,13 +561,22 @@ class GuiViewSettings(object):
         self.thres_adv.grid(row=4, column=0, columnspan=2, padx=10, pady=0, ipady=0, sticky="")
 
         # setup widgets in thres adv frame
-        self.hue_weight_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
-        self.color_dist_label.grid(row=1, column=0, columnspan=2, sticky="e")
-        self.depth_dist_label.grid(row=2, column=0, columnspan=2, sticky="e")
-        self.param_color_dist.grid(row=1, column=2, columnspan=2, sticky="")
-        self.param_depth_dist.grid(row=2, column=2, columnspan=2, sticky="")
-        self.close_thres_button.grid(row=3, column=2, columnspan=2, sticky="se", padx=20, pady=20)
-        self.hue_weight_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        # self.hue_weight_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
+        # self.hue_weight_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        # self.color_dist_label.grid(row=1, column=0, columnspan=2, sticky="e")
+        # self.depth_dist_label.grid(row=2, column=0, columnspan=2, sticky="e")
+        # self.param_color_dist.grid(row=1, column=2, columnspan=2, sticky="")
+        # self.param_depth_dist.grid(row=2, column=2, columnspan=2, sticky="")
+        self.close_thres_button.grid(row=4, column=2, columnspan=2, sticky="se", padx=20, pady=20)
+        
+        self.similarity_to_backdrop_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.similarity_to_backdrop_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        self.similarity_to_mannequin_label.grid(row=1, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.similarity_to_mannequin_slider.grid(row=1, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        self.optimize_speed_label.grid(row=2, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.optimize_speed_slider.grid(row=2, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        self.optimize_quality_label.grid(row=3, column=0, columnspan=2, pady=(40,0), sticky="e")
+        self.optimize_quality_slider.grid(row=3, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
 
         # setup widgets in motor adv frame
         self.angular_velocity_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
@@ -597,6 +666,7 @@ class GuiViewSettings(object):
         self.thres_adv_frame.grid_rowconfigure(1, weight=10)
         self.thres_adv_frame.grid_rowconfigure(2, weight=10)
         self.thres_adv_frame.grid_rowconfigure(3, weight=10)
+        self.thres_adv_frame.grid_rowconfigure(4, weight=10)
 
     def config_motor_adv_frame_row_col(self):
         self.motor_adv_frame.grid_columnconfigure(0, weight=1)
