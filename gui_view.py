@@ -55,11 +55,19 @@ class GuiView(object):
         self.logo_label = tk.Label(self.right_frame, image = self.logo_img, bg=RIGHT_FRAME_COLOR)
 
     def create_progress_bar(self):
-        s = ttk.Style()
-        s.theme_use('clam')
+        self.progress_style = ttk.Style()
+        self.progress_style.theme_use('clam')
         TROUGH_COLOR = PROGRESS_BAR_BG
         BAR_COLOR = PROGRESS_BAR_COLOR
-        s.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR, bordercolor=TROUGH_COLOR, background=BAR_COLOR, lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
+        self.progress_style.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR,
+            bordercolor=TROUGH_COLOR, background=BAR_COLOR,
+            lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
+        self.progress_style.layout('bar.Horizontal.TProgressbar', 
+             [('Horizontal.Progressbar.trough',
+               {'children': [('Horizontal.Progressbar.pbar',
+                              {'side': 'left', 'sticky': 'ns'})],
+                'sticky': 'nswe'}), 
+              ('Horizontal.Progressbar.label', {'sticky': ''})])
         self.progress_var = DoubleVar()
         self.progress_var.set(0)
         self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", variable=self.progress_var,
@@ -68,7 +76,17 @@ class GuiView(object):
 
     def update_progress_bar(self, curr_step, max_step):
         print("Progress bar updated")
-        self.progress_var.set(int(curr_step / max_step * 100))
+        progress_percent = int(curr_step / max_step * 100)
+        self.progress_var.set(progress_percent)
+        if (progress_percent > 50):
+            self.progress_style.configure('bar.Horizontal.TProgressbar', foreground="white",
+                    text='{:g} %'.format(int(curr_step / max_step * 100))) 
+            if (progress_percent == 100):
+                self.progress_style.configure('bar.Horizontal.TProgressbar', foreground="white",
+                    text="Done!") 
+        else:
+            self.progress_style.configure('bar.Horizontal.TProgressbar', foreground=WIN_BG_COLOR,
+                    text='{:g} %'.format(int(curr_step / max_step * 100))) 
         self.progress.update()
 
     def manage_settings(self, parent, action=None):
