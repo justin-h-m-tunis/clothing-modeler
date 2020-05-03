@@ -1,8 +1,8 @@
 from gui_config import *
 import open3d as o3d
 import serial
-# from motor_camera.Motor import *
-# from motor_camera.Camera import *
+from motor_camera.Motor import *
+from motor_camera.Camera import *
 
 
 class GuiModel(object):
@@ -17,11 +17,11 @@ class GuiModel(object):
             macrostep_time = int(settings['macrostep_time'])
             baudrate = int(settings['baud'])
             com = settings['com']
-        # self.pathname = "data/"
-        # self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=200,baudrate=baudrate,com=str(com),onSerialFail=onSerialFail)
-        # self.camera = Camera()
-        # self.updateFn=updateFn
-        # self.cond = lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname) and additional_conds
+        self.pathname = "data/"
+        self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=200,baudrate=baudrate,com=str(com),onSerialFail=onSerialFail)
+        self.camera = Camera()
+        self.updateFn=updateFn
+        self.cond = lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname) and additional_conds
 
     def set_image_path(self, img_path):
         self.pathname = img_path
