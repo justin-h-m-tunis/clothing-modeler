@@ -15,6 +15,7 @@ class GuiModel(object):
             com='COM3'
         else:
             macrostep_time = int(settings['macrostep_time'])
+            print(macrostep_time)
             baudrate = int(settings['baud'])
             com = settings['com']
         self.pathname = "data/"
@@ -29,7 +30,7 @@ class GuiModel(object):
     def run_motor_camera(self, img_path=None):
         if img_path is None:
             img_path = self.pathname
-        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=img_path), updateFn=self.updateFn)
+        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=True, path=img_path), updateFn=self.updateFn)
 
 
 '''

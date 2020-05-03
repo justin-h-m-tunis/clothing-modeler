@@ -13,6 +13,9 @@ from motor_camera import *
 import cv2
 from bkgThresh import *
 from PIL import Image
+import pickle
+import os
+import threading
 
 class GuiController(object):
     """GUI controller that handles model and view"""
@@ -26,6 +29,8 @@ class GuiController(object):
             self.init_model(settings=None)
         self.init_view(parent)
         self.parent = parent
+        self.optimizer_weights=[]
+        self.optimizer_biases=[]
 
     def init_model(self, settings=None, onSerialFail=lambda: print("Motor not found!")):
         self.model = gui_model.GuiModel(updateFn=lambda n: self.update_progress(n,200),settings=settings, onSerialFail=onSerialFail)
@@ -49,6 +54,8 @@ class GuiController(object):
         self.bind_motor_adv_frame()
         self.bind_camera_adv_frame()
         self.bind_stop()
+        self.bind_optimize()
+        self.bind_optimize_revert()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -106,7 +113,7 @@ class GuiController(object):
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.capture_bg_button.bind("<Leave>",
             lambda e: self.view.capture_bg_button.configure(bg = BUTTON_COLOR))
-        self.view.capture_bg_button.bind("<ButtonRelease-1>", self.run_capture_bg)
+        self.view.capture_bg_button.bind("<ButtonRelease-1>", lambda event : self.model.run_motor_camera(img_path='data/bkg/'))
 
     def bind_adv_option(self):
         self.view.adv_option.bind("<Enter>",
@@ -127,7 +134,7 @@ class GuiController(object):
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.test_spin_button.bind("<Leave>",
             lambda e: self.view.settings_panel.test_spin_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda event : self.model.run_motor_camera(img_path='data/bkg'))
+        self.view.settings_panel.test_spin_button.bind("<ButtonRelease-1>", lambda event: self.model.motor.fullRotation())
 
     def bind_camera_adv_option(self):
         self.view.settings_panel.camera_adv.bind("<Enter>",
@@ -155,7 +162,28 @@ class GuiController(object):
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_FOCUS_COLOR))
         self.view.settings_panel.prev_thres_button.bind("<Leave>",
             lambda e: self.view.settings_panel.prev_thres_button.configure(bg = BUTTON_COLOR))
-        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(rgb_output_path=PREVIEW_DIR_PATH,img_ind=0))
+        self.view.settings_panel.prev_thres_button.bind("<ButtonRelease-1>", lambda event : self.img_thres(rgb_output_path=PREVIEW_DIR_PATH,img_ind=50))
+
+    def bind_optimize(self):
+        self.view.settings_panel.optimize_button.bind("<Enter>",
+            lambda e: self.view.settings_panel.optimize_button.configure(bg=BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.optimize_button.bind("<Leave>",
+            lambda e: self.view.settings_panel.optimize_button.configure(bg=BUTTON_COLOR))
+        self.view.settings_panel.optimize_button.bind("<ButtonRelease-1>",
+            lambda event: self.get_optimized_weights(W0=self.optimizer_weights,b0=self.optimizer_biases,
+                                                      learning_speed=self.view.settings_panel.optimize_speed_slider.get(),
+                                                        optimize_quality=self.view.settings_panel.optimize_quality_slider.get()))
+
+    def bind_optimize_revert(self):
+        self.view.settings_panel.optimize_revert.bind("<Enter>",
+            lambda e: self.view.settings_panel.optimize_revert.configure(bg=BUTTON_FOCUS_COLOR))
+        self.view.settings_panel.optimize_revert.bind("<Leave>",
+            lambda e: self.view.settings_panel.optimize_revert.configure(bg=BUTTON_COLOR))
+        def reset_optimizer():
+            self.optimizer_biases = []
+            self.optimizer_weights = []
+            print("optimizer reset")
+        self.view.settings_panel.optimize_revert.bind("<ButtonRelease-1>", lambda event: reset_optimizer())
 
     def bind_settings_apply(self):
         self.view.settings_panel.settings_apply_button.bind("<Enter>",
@@ -250,7 +278,43 @@ class GuiController(object):
             
         return [crop_left, crop_right, crop_top_result, crop_bottom_result]
 
-    def img_thres(self, rgb_output_path=None, depth_output_path=None, img_ind=0):
+    def get_optimized_weights(self,W0,b0,optimize_quality,learning_speed):
+        print("optimizing!")
+        img_path = 'data/color/'
+        depth_path = 'data/depth/'
+        bkg_path = 'data/bkg/color/'
+        depth_bkg_path = 'data/bkg/depth/'
+        sample_num = int(50*optimize_quality)
+        im = Image.open(img_path + 'color_1.png')
+        [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
+        w = crop_right - crop_left
+        h = crop_bottom - crop_top
+        ims = np.zeros((h, w, 3, sample_num))
+        depths = np.zeros((h, w, sample_num))
+        bkgs = np.zeros((h, w, 3, sample_num))
+        bkgdepths = np.zeros((h, w, sample_num))
+        for i in range(sample_num):
+            f = ['color_' + str(int(200 / sample_num * i)) + '.png',
+                'Depth_' + str(int(200 / sample_num * i)) + '.png']
+            print(i, img_path + f[0])
+            mask = getThresholdMask(
+                cv2.imread(img_path + f[0])[crop_top:crop_bottom, crop_left:crop_right, :],
+                cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right],
+                "backdrop.png",
+                "mannequin.png",
+                depth_range=(700, 1270),
+                bk_confidence=self.view.settings_panel.similarity_to_backdrop_slider.get(),
+                man_confidence=self.view.settings_panel.similarity_to_mannequin_slider.get(),
+                apply_mask=False)
+            ims[:, :, :, i] = applyMask( cv2.imread(img_path + f[0])[crop_top:crop_bottom, crop_left:crop_right, :], mask,3)
+            cv2.waitKey(1)
+            depths[:, :, i] = applyMask(cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right], mask,1)
+            bkgs[:, :, :, i] = applyMask(cv2.imread(bkg_path + f[0])[crop_top:crop_bottom, crop_left:crop_right, :], mask,3)
+            bkgdepths[:, :, i] = applyMask(cv2.imread(depth_bkg_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom, crop_left:crop_right], mask,1)
+        self.optimizer_weights, self.optimizer_biases = optimizeWeights(ims.astype(np.uint8), depths, bkgs.astype(np.uint8),
+                        bkgdepths, epochs=3,learning_rate=.25*learning_speed, starting_weights=self.optimizer_weights, starting_biases=self.optimizer_biases)
+
+    def img_thres(self, rgb_output_path=None, depth_output_path=None, img_ind=50):
         curr_dirname = os.path.dirname(__file__)
         img_path = 'data/color/'
         depth_path = 'data/depth/'
@@ -263,36 +327,52 @@ class GuiController(object):
         print("Processing image " + str(img_ind))
         # pull parameters from settings/preview panel
         (depth_thresh, rgb_thresh) = self.parse_thres_depth_rgb_dist()
+        im = Image.open(img_path + 'color_1.png')
+        [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
+        print([crop_left, crop_right, crop_top, crop_bottom])
+        w = crop_right - crop_left
+        h = crop_bottom - crop_top
 
-        img_names = [os.listdir(img_path), os.listdir(depth_path)]
-        f = ['color_' + str(img_ind) + '.png','Depth_' + str(img_ind) + '.png']
-        img = cv2.imread(img_path + f[0])
-        rgb_dist = getBkgDistRGB(img,cv2.imread(bkg_path + f[0]))
-        depth = cv2.imread(depth_path + f[1])
-        depth_dist = getBkgDistDepth(depth,cv2.imread(depth_bkg_path + f[1]))
-        bkg_thresh_rgb = removeBkg(img,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
-        bkg_thresh_depth = removeBkg(depth,np.array([rgb_dist,depth_dist]),[rgb_thresh,depth_thresh],'or')
+        f = ['color_' + str(img_ind) + '.png', 'Depth_' + str(img_ind) + '.png']
+        im = cv2.imread(img_path + f[0])[crop_top:crop_bottom,crop_left:crop_right, :]
+        depth = cv2.imread(depth_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom,crop_left:crop_right]
+        im_bk = cv2.imread(bkg_path + f[0])[crop_top:crop_bottom,crop_left:crop_right, :]
+        depth_bk = cv2.imread(depth_bkg_path + f[1], cv2.IMREAD_ANYDEPTH)[crop_top:crop_bottom,crop_left:crop_right]
+
+        bkg_thresh_rgb, bkg_thresh_depth = removeBackgroundThreshold(
+                                            im.astype(np.uint8),
+                                            depth,
+                                            im_bk,
+                                            depth_bk,
+                                            depth_range = (700,1270),
+                                            bk_path='backdrop.png',
+                                            man_path='mannequin.png',
+                                            bk_confidence=self.view.settings_panel.similarity_to_backdrop_slider.get(),
+                                            man_confidence=self.view.settings_panel.similarity_to_mannequin_slider.get(),
+                                            bk_weights=self.optimizer_weights,
+                                            bk_biases=self.optimizer_biases,
+                                            show_images=False)
         '''
         take bkg_thresh_rgb and bkg_depth_rgb and do static crop/color filtering
         '''
         if rgb_output_path is not None:
             cv2.imwrite(rgb_output_path + f[0], bkg_thresh_rgb)
-            im = Image.open(rgb_output_path + f[0])
+            '''im = Image.open(rgb_output_path + f[0])
             [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
                 im2.save(rgb_output_path + f[0])
             else:
-                print("crop dimension error! showing original image")
+                print("crop dimension error! showing original image")'''
         if depth_output_path is not None:
-            cv2.imwrite(depth_output_path + f[0], bkg_thresh_depth)
-            im = Image.open(depth_output_path + f[0])
+            cv2.imwrite(depth_output_path + f[1], bkg_thresh_depth)
+        '''im = Image.open(depth_output_path + f[1])
             [crop_left, crop_right, crop_top, crop_bottom] = self.parse_crop_params2(im)
             if (not self.is_crop_error(crop_top, crop_left, crop_bottom, crop_right, im)):
                 im2 = im.crop((crop_left, crop_top, crop_right, crop_bottom))
-                im2.save(depth_output_path + f[0])
+                im2.save(depth_output_path + f[1])
             else:
-                print("crop dimension error! showing original image")
+                print("crop dimension error! showing original image")'''
         self.view.settings_panel.refresh_preview()
         print("done!")
 
@@ -303,11 +383,12 @@ class GuiController(object):
         self.view.place_q_start()
 
     '''Main logic execution'''
-    def run_system(self, img_path='data', get_images=True, Threshold_images=True,Stitch_images=True):
+    def run_system(self, img_path='data/', get_images=False, Threshold_images=True,Stitch_images=False):
         print("3D scanning system start with default settings")
         self.view.forget_q_start()
         self.view.place_stop()
         self.view.manage_settings(self.parent, False)
+        self.load_settings(self.settings_path)
         settings = np.load(self.settings_path)
         if get_images:
             # init model
@@ -316,14 +397,24 @@ class GuiController(object):
                 def raise_serial_exception():
                     raise Exception("Motor disconnected, aborting!")
 
-                self.init_model(onSerialFail=raise_serial_exception())
-                self.model.run_motor_camera(img_path=img_path, settings=settings, onSerialFail=raise_serial_exception())
+                self.model.run_motor_camera(img_path=img_path)
             except Exception as E:
                 print(E)
                 return
         if Threshold_images:
-            for i in range(settings['macrosteps']):
-                self.img_thres(rgb_output_path='data/color',depth_output_path='data/depth',img_ind=i)
+            threads = []
+            '''for i in range(settings['macrosteps']):
+                threads.append(threading.Thread(target=self.img_thres,
+                                                    args=('data/color_thresholded/','data/depth_thresholded/',i)))
+                threads[-1].start()
+                if len(threads) == n:
+                    print(i)
+                    for t in threads:
+                        t.join()
+                    print("done")
+                    threads = []'''
+
+            self.img_thres(rgb_output_path='data/color_thresholded/',depth_output_path='data/depth_thresholded/',img_ind=i)
         if Stitch_images:
             pass
 
@@ -331,6 +422,7 @@ class GuiController(object):
     def run_capture_bg(self, event):
         print("3D scanning system start: capture bg")
         self.view.manage_settings(self.parent, False)
+
         pass
 
     '''export settings file to a disk location'''
@@ -450,6 +542,9 @@ class GuiController(object):
         self.view.settings_panel.param_t2_31.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_t2_31.insert(0, data["t2_21"])
 
+        self.optimizer_weights = data["optimizer_weights"]
+        self.optimizer_biases = data["optimizer_biases"]
+
     '''Open settings panel'''
     def run_settings(self, event, action=None):
         if (os.path.exists(self.settings_path)):
@@ -467,7 +562,7 @@ class GuiController(object):
         ymax_bottom = self.view.settings_panel.param_ymax_entry.get()
         baud = 9600
         com = 'COM3'
-        w_max = speed*(MAXIMUM_OMEGA - MINIMUM_OMEGA) + MINIMUM_OMEGA
+        w_max = np.power(MAXIMUM_OMEGA/MINIMUM_OMEGA,speed)*MINIMUM_OMEGA
         tr = speed*(MAXIMUM_TR- MINIMUM_TR) + MINIMUM_TR
         delay = speed*(MAXIMUM_DELAY - MINIMUM_DELAY) + MINIMUM_DELAY
         macrostep_time = (360/200)/w_max + tr + delay + DELAY_TOL
@@ -571,7 +666,9 @@ class GuiController(object):
                     similarity_to_backdrop=similarity_to_backdrop,
                     similarity_to_mannequin=similarity_to_mannequin,
                     optimize_speed=optimize_speed,
-                    optimize_quality=optimize_quality
+                    optimize_quality=optimize_quality,
+                    optimizer_weights=self.optimizer_weights,
+                    optimizer_biases=self.optimizer_biases
                 )
         self.view.manage_settings(self.parent, False)
         # run system
