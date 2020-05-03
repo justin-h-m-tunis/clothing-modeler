@@ -374,6 +374,12 @@ class GuiController(object):
         self.view.settings_panel.param_depth_dist.insert(0, data["depth_dist"])
         self.view.settings_panel.hue_weight_slider.set(data["hue_weight"])
 
+        # modified thresh adv panel
+        self.view.settings_panel.similarity_to_backdrop_slider.set(data["similarity_to_backdrop"])
+        self.view.settings_panel.similarity_to_mannequin_slider.set(data["similarity_to_mannequin"])
+        self.view.settings_panel.optimize_speed_slider.set(data["optimize_speed"])
+        self.view.settings_panel.optimize_quality_slider.set(data["optimize_quality"])
+
         self.view.settings_panel.param_rise_time.delete(0, MAX_CHAR_LEN)
         self.view.settings_panel.param_rise_time.insert(0, data["rise_time"])
         self.view.settings_panel.param_fall_time.delete(0, MAX_CHAR_LEN)
@@ -471,6 +477,12 @@ class GuiController(object):
         depth_dist = self.view.settings_panel.param_depth_dist.get()
         hue_weight = self.view.settings_panel.hue_weight_slider.get()
 
+        # modified thresh adv panel
+        similarity_to_backdrop = self.view.settings_panel.similarity_to_backdrop_slider.get()
+        similarity_to_mannequin = self.view.settings_panel.similarity_to_mannequin_slider.get()
+        optimize_speed = self.view.settings_panel.optimize_speed_slider.get()
+        optimize_quality = self.view.settings_panel.optimize_quality_slider.get()
+
         rise_time = self.view.settings_panel.param_rise_time.get()
         fall_time = self.view.settings_panel.param_fall_time.get()
         delay_time = self.view.settings_panel.param_delay_time.get()
@@ -556,6 +568,10 @@ class GuiController(object):
                     t2_11=t2_11,
                     t2_21=t2_21,
                     t2_31=t2_31,
+                    similarity_to_backdrop=similarity_to_backdrop,
+                    similarity_to_mannequin=similarity_to_mannequin,
+                    optimize_speed=optimize_speed,
+                    optimize_quality=optimize_quality
                 )
         self.view.manage_settings(self.parent, False)
         # run system
