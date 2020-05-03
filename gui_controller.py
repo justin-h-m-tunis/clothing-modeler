@@ -48,6 +48,7 @@ class GuiController(object):
         self.bind_thres_adv_frame()
         self.bind_motor_adv_frame()
         self.bind_camera_adv_frame()
+        self.bind_stop()
         
     def init_menu(self):
         self.menubar = tk.Menu(window)
@@ -85,6 +86,13 @@ class GuiController(object):
 
     def bind_intro_text(self):
         self.view.intro_text.bind("<Configure>", self.scale_font)
+
+    def bind_stop(self):
+        self.view.stop_button.bind("<Enter>",
+            lambda e: self.view.stop_button.configure(bg = STOP_BUTTON_FOCUS_COLOR))
+        self.view.stop_button.bind("<Leave>",
+            lambda e: self.view.stop_button.configure(bg = STOP_BUTTON_COLOR))
+        self.view.stop_button.bind("<ButtonRelease-1>", lambda event: self.stop_system())
 
     def bind_q_start(self):
         self.view.q_start_button.bind("<Enter>",
@@ -288,9 +296,17 @@ class GuiController(object):
         self.view.settings_panel.refresh_preview()
         print("done!")
 
+    '''Stop the process'''
+    def stop_system(self):
+        print("System stop")
+        self.view.forget_stop()
+        self.view.place_q_start()
+
     '''Main logic execution'''
     def run_system(self, img_path='data', get_images=True, Threshold_images=True,Stitch_images=True):
         print("3D scanning system start with default settings")
+        self.view.forget_q_start()
+        self.view.place_stop()
         self.view.manage_settings(self.parent, False)
         settings = np.load(self.settings_path)
         if get_images:
