@@ -33,6 +33,12 @@ class GuiView(object):
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
             activeforeground="white")
 
+    def create_stop(self):
+        self.stop_button = tk.Button(self.left_frame, text="Stop", 
+            fg="white", bg=STOP_BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=STOP_BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+
     def create_adv_options(self):
         self.adv_option = tk.Label(self.left_frame, text="Settings", fg="white",
             bg=WIN_BG_COLOR, font="Ubuntu 10", cursor="hand2")
@@ -118,6 +124,7 @@ class GuiView(object):
         self.create_adv_options()
         self.create_progress_bar()
         self.create_capture_bg()
+        self.create_stop()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
@@ -128,5 +135,17 @@ class GuiView(object):
         self.capture_bg_button.place(anchor="center", relx=0.5, rely=0.8)
         self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
         self.progress.place(anchor="center", relx=0.5, rely=0.87)
+
+    def place_q_start(self):
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.7)
+
+    def forget_q_start(self):
+        self.q_start_button.place_forget()
+
+    def place_stop(self):
+        self.stop_button.place(anchor="center", relx=0.5, rely=0.7)
+
+    def forget_stop(self):
+        self.stop_button.place_forget()
 
 
