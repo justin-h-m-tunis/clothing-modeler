@@ -122,7 +122,7 @@ class Camera:
         [self.scale_x, self.scale_y, self.crop_x, self.crop_y, self.shift_rgb, self.shift_d] = getCropScaleFromK(self.res_rgb, self.res_d, K_rgb, K_d,
                                                                                    center_points)
 
-    def captureRGBD(self,num,show_image=True, path='data/'): #will return False when frames are not available
+    def captureRGBD(self,num,show_image=False, path='data/'): #will return False when frames are not available
         if not(self.kinect.has_new_color_frame() and self.kinect.has_new_depth_frame()):
             return False
         depthFrame = self.kinect.get_last_depth_frame()

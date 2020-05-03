@@ -255,7 +255,7 @@ class GuiViewSettings(object):
     def create_similarity_to_backdrop_slider(self):
         self.similarity_to_backdrop_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
             orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
-            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+            from_=0, to=1, digits=3, resolution=0.01, font="Ubuntu 14")
         self.similarity_to_backdrop_slider.set(0.5)
         return self.similarity_to_backdrop_slider
 
@@ -267,7 +267,7 @@ class GuiViewSettings(object):
     def create_similarity_to_mannequin_slider(self):
         self.similarity_to_mannequin_slider = tk.Scale(self.thres_adv_frame, relief="flat", sliderrelief="flat",
             orient="horizontal", bg="#FFFFFF", bd = 1, showvalue=1, highlightthickness=0, 
-            from_=0, to=1, digits=2, resolution=0.1, font="Ubuntu 14")
+            from_=0, to=1, digits=3, resolution=0.01, font="Ubuntu 14")
         self.similarity_to_mannequin_slider.set(0.5)
         return self.similarity_to_mannequin_slider
 
@@ -295,6 +295,19 @@ class GuiViewSettings(object):
         self.optimize_quality_slider.set(0.5)
         return self.optimize_quality_slider
 
+    def create_optimize_button(self):
+        self.optimize_button = tk.Button(self.thres_adv_frame, text="Optimize!",
+            fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+        return self.optimize_button
+
+    def create_optimize_revert(self):
+        self.optimize_revert = tk.Button(self.thres_adv_frame, text="Revert",
+                                         fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+                                         relief="flat", pady=-1, activebackground=CANCEL_BUTTON_COLOR,
+                                         activeforeground="white")
+        return self.optimize_revert
 
     '''Motor advanced frame implementations'''
 
@@ -485,6 +498,8 @@ class GuiViewSettings(object):
                                     self.create_optimize_speed_slider(),
                                     self.create_optimize_quality_label(),
                                     self.create_optimize_quality_slider(),
+                                    self.create_optimize_button(),
+                                    self.create_optimize_revert()
                                     ]
 
         # create motor adv frame widgets
@@ -567,7 +582,7 @@ class GuiViewSettings(object):
         # self.depth_dist_label.grid(row=2, column=0, columnspan=2, sticky="e")
         # self.param_color_dist.grid(row=1, column=2, columnspan=2, sticky="")
         # self.param_depth_dist.grid(row=2, column=2, columnspan=2, sticky="")
-        self.close_thres_button.grid(row=4, column=2, columnspan=2, sticky="se", padx=20, pady=20)
+        self.close_thres_button.grid(row=5, column=2, columnspan=2, sticky="se", padx=20, pady=20)
         
         self.similarity_to_backdrop_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
         self.similarity_to_backdrop_slider.grid(row=0, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
@@ -577,6 +592,8 @@ class GuiViewSettings(object):
         self.optimize_speed_slider.grid(row=2, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
         self.optimize_quality_label.grid(row=3, column=0, columnspan=2, pady=(40,0), sticky="e")
         self.optimize_quality_slider.grid(row=3, column=2, columnspan=2, pady=(20,0), padx=0, sticky="")
+        self.optimize_button.grid(row=4, column=0,columnspan=2, sticky="sw",padx=20,pady=20)
+        self.optimize_revert.grid(row=4, column=2,columnspan=2, sticky="se",padx=20,pady=20)
 
         # setup widgets in motor adv frame
         self.angular_velocity_label.grid(row=0, column=0, columnspan=2, pady=(40,0), sticky="e")
@@ -667,6 +684,7 @@ class GuiViewSettings(object):
         self.thres_adv_frame.grid_rowconfigure(2, weight=10)
         self.thres_adv_frame.grid_rowconfigure(3, weight=10)
         self.thres_adv_frame.grid_rowconfigure(4, weight=10)
+        self.thres_adv_frame.grid_rowconfigure(5, weight=10)
 
     def config_motor_adv_frame_row_col(self):
         self.motor_adv_frame.grid_columnconfigure(0, weight=1)

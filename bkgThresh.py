@@ -61,24 +61,22 @@ def convolutionFn(I1,h):
 # but hey at least realizing this will make it better
 
 #inputs = hdist, sdist, vdist, ddist, depthmask,backdropmask, filters = gaussian* (x,y,z grad, 3d laplacian)
-def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_colors=None, man_colors=None):
+def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_colors=None, man_colors=None, show_images=True):
     for i in range(3):
         ims[:,:,i,:] = gaussian_filter(ims[:, :, i, :], (1,1,0))
         bkgs[:,:,i,:] = gaussian_filter(bkgs[:,:,i,:],(1,1,0))
     depths[:, :, :] = gaussian_filter(depths[:, :, :], (1,1,0))
-    bkgdepths[:, :, :] = gaussian_filter(bkgdepths[:, :, :], (1,1,0.1))
+    bkgdepths[:, :, :] = gaussian_filter(bkgdepths[:, :, :], (1,1,0))
 
-    num_filters = 7
-    depth_scale = np.max([np.max(depths),np.max(bkgdepths)])
+    num_filters = 6
+    #depth_scale = np.max([np.max(depths),np.max(bkgdepths)])
     responses = np.zeros((len(ims),len(ims[0]),num_filters,np.shape(ims)[3]))
     print("computing responses")
     for i in range(np.shape(ims)[3]):
-        cv2.imshow("ims",ims[:,:,:,i])
-        cv2.imshow("bks",bkgs[:,:,:,i])
         hsv_ims = cv2.cvtColor(ims[:, :, :, i], cv2.COLOR_BGR2HSV)
         hsvdist = np.tanh(2*abs(hsv_ims - cv2.cvtColor(bkgs[:,:,:,i],cv2.COLOR_BGR2HSV))/255.0)
-        cv2.imshow("hsv",(255*hsvdist).astype(np.uint8))
-        ddist = np.tanh(2*abs(depths[:,:,i].astype(float) - bkgdepths[:,:,i].astype(float))/depth_scale)
+        rgbdist = np.tanh(2*abs(ims[:,:,:,i] - bkgs[:,:,:,i])/255.0)
+        '''ddist = np.tanh(2*abs(depths[:,:,i].astype(float) - bkgdepths[:,:,i].astype(float))/depth_scale)
         cv2.imshow("ddist",(255*ddist).astype(np.uint8))
         depth_mask = thresholdFn(depths[:,:,i],lb=depthrange[0],ub=depthrange[1])
         cv2.imshow("d mask",(255*depth_mask).astype(np.uint8))
@@ -87,13 +85,20 @@ def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_colors=None,
         cv2.imshow("bkg mask",(255*backdrop_mask).astype(np.uint8))
         mannequin_mask = thresholdFn(hsv_ims, mean=man_colors[0], cov=man_colors[1], direction='exclusive', dist='normal')
         print(mannequin_mask)
-        cv2.imshow("man mask", (255 * mannequin_mask).astype(np.uint8))
+        cv2.imshow("man mask", (255 * mannequin_mask).astype(np.uint8))'''
+        if show_images:
+            cv2.imshow("ims", ims[:, :, :, i])
+            cv2.imshow("bks", bkgs[:, :, :, i])
+            cv2.imshow("hsv", (255 * hsvdist).astype(np.uint8))
+            cv2.imshow("rgb", (255 * rgbdist).astype(np.uint8))
+            cv2.waitKey(1)
+
         responses[:,:,:,i] = np.dstack((hsvdist,
-                                       ddist,
-                                       backdrop_mask,
-                                       mannequin_mask,
-                                       depth_mask))
-        cv2.waitKey(1)
+                                       rgbdist,
+                                       #backdrop_mask,
+                                       #mannequin_mask,
+                                       #depth_mask
+                                    ))
     return responses
 
 '''def createFilteredResponse(input, gaussian_size):
@@ -109,7 +114,7 @@ def getResponses(ims,depths,bkgs,bkgdepths,depthrange=(700,1270),bk_colors=None,
     pickle.dump(responses, open("responses.pkl", "wb"))
     return responses
 '''
-def getOutput(responses,weights,biases):
+def getOutput(responses,weights,biases, show_images=True):
     print("Getting Weighted Outputs")
     n_images = np.shape(responses)[3]
     n_filters = np.shape(responses)[2]
@@ -124,11 +129,12 @@ def getOutput(responses,weights,biases):
 
     output = np.stack((obj_means,bkg_means),axis=3)
     output_uncertainties = np.stack((obj_uncertainties,bkg_uncertainties),axis=3)
-    cv2.imshow("obj_means", (255*output[:,:,0,0]).astype(np.uint8))
-    cv2.imshow("bkg_means", (255*output[:,:,0,1]).astype(np.uint8))
-    cv2.imshow("obj_uncertainties", (255*output_uncertainties[:,:,0,0]/np.max(output_uncertainties)).astype(np.uint8))
-    cv2.imshow("bkg_uncertainties", (255*output_uncertainties[:,:,0,1]/np.max(output_uncertainties)).astype(np.uint8))
-    cv2.waitKey(1)
+    if show_images:
+        cv2.imshow("obj_means", (255*output[:,:,0,0]).astype(np.uint8))
+        cv2.imshow("bkg_means", (255*output[:,:,0,1]).astype(np.uint8))
+        cv2.imshow("obj_uncertainties", (255*output_uncertainties[:,:,0,0]/np.max(output_uncertainties)).astype(np.uint8))
+        cv2.imshow("bkg_uncertainties", (255*output_uncertainties[:,:,0,1]/np.max(output_uncertainties)).astype(np.uint8))
+        cv2.waitKey(1)
 
     return output,output_uncertainties
 
@@ -140,7 +146,7 @@ def calculateLoss(output,uncertainties):
     loss = sigmoid(abs(output[:,:,:,0]-output[:,:,:,1]) - np.sum(uncertainties,axis=3))
     return loss
 
-def getDerivs(weights, biases, responses, output, uncertainties):
+def getDerivs(weights, biases, responses, output, uncertainties, ignore=None):
     print("Determining Gradients")
     n = np.shape(responses)[3]
     h = np.shape(responses)[0]
@@ -150,22 +156,37 @@ def getDerivs(weights, biases, responses, output, uncertainties):
     L = calculateLoss(output,uncertainties)
     print(np.max(responses),np.max(output),np.min(output),np.max(uncertainties),np.min(L))
 
-    dLdf = L*(1-L) #1xDDn #1x1
-    dfdu = 2*np.equal(output,np.tile(np.expand_dims(np.max((output),axis=3),3),(1,1,1,2)),dtype=float)-1 #DDnx2 #1x2
-    dfds = np.array([-1,-1]) # 1x2
-    x = np.swapaxes(responses,2,3) - biases
-    x_ = np.sum(x,axis=(3))/channels
-    x_diff = np.moveaxis(np.tile(np.moveaxis(np.moveaxis(x,3,0) - x_,0,3),(2,1,1,1,1)),0,-1)
-    dudw = (x-biases)/n #DDnxf #1xf
-    dsdw = np.moveaxis(n/(n-1)*np.moveaxis(weights.T * (x_diff ** 2),3,0)/(uncertainties*W_**2),0,3) #DDnx2xf, 2xf
-    dudb = -weights #2xf
-    dsdb = -np.moveaxis(n/(n-1)*np.moveaxis(weights.T**2 * x_diff * (1-1/channels),3,0)/(uncertainties*W_**2),0,3) #DDnx2xf, 2xf
+    if ignore is not None:
+        pix_inds = np.nonzero(~np.equal(output,ignore).all(axis=3))
+        dLdf = L[pix_inds]*(1-L[pix_inds]) #1xDDn #1x1
+        dfdu = 2*np.equal(output[pix_inds],np.tile(np.expand_dims(np.max((output[pix_inds]),axis=3),3),(1,1,1,2)),dtype=float)-1 #DDnx2 #1x2
+        dfds = np.array([-1,-1]) # 1x2
+        x = np.swapaxes(responses[pix_inds[0],pix_inds[1],:,pix_inds[2]],2,3) - biases
+        x_ = np.sum(x,axis=(3))/channels
+        x_diff = np.moveaxis(np.tile(np.moveaxis(np.moveaxis(x,3,0) - x_,0,3),(2,1,1,1,1)),0,-1)
+        dudw = (x-biases)/n #DDnxf #1xf
+        dsdw = np.moveaxis(n/(n-1)*np.moveaxis(weights.T * (x_diff ** 2),3,0)/((uncertainties[pix_inds]+.0001)*W_**2),0,3) #DDnx2xf, 2xf
+        dudb = -weights #2xf
+        dsdb = -np.moveaxis(n/(n-1)*np.moveaxis(weights.T**2 * x_diff * (1-1/channels),3,0)/((uncertainties[pix_inds]+.0001)*W_**2),0,3) #DDnx2xf, 2xf
+        print(np.min(dsdb),np.max(dsdb),np.min(abs(uncertainties)))
+    else:
+        dLdf = L*(1-L) #1xDDn #1x1
+        dfdu = 2*np.equal(output,np.tile(np.expand_dims(np.max((output),axis=3),3),(1,1,1,2)),dtype=float)-1 #DDnx2 #1x2
+        dfds = np.array([-1,-1]) # 1x2
+        x = np.swapaxes(responses,2,3) - biases
+        x_ = np.sum(x,axis=(3))/channels
+        x_diff = np.moveaxis(np.tile(np.moveaxis(np.moveaxis(x,3,0) - x_,0,3),(2,1,1,1,1)),0,-1)
+        dudw = (x-biases)/n #DDnxf #1xf
+        dsdw = np.moveaxis(n/(n-1)*np.moveaxis(weights.T * (x_diff ** 2),3,0)/((uncertainties+.0001)*W_**2),0,3) #DDnx2xf, 2xf
+        dudb = -weights #2xf
+        dsdb = -np.moveaxis(n/(n-1)*np.moveaxis(weights.T**2 * x_diff * (1-1/channels),3,0)/((uncertainties+.0001)*W_**2),0,3) #DDnx2xf, 2xf
+        print(np.min(dsdb),np.max(dsdb),np.min(abs(uncertainties)))
 
-    dLdf = np.reshape(dLdf,(1,h*w*n))
-    dfdu = np.reshape(dfdu,(h*w*n,2))
-    dudw = np.reshape(dudw, (h * w * n, channels))
-    dsdw = np.reshape(np.swapaxes(dsdw,3,4), (h * w * n, 2, channels))
-    dsdb = np.reshape(np.swapaxes(dsdb,3,4), (h*w*n,2,channels))
+        dLdf = np.reshape(dLdf,(1,h*w*n))
+        dfdu = np.reshape(dfdu,(h*w*n,2))
+        dudw = np.reshape(dudw, (h * w * n, channels))
+        dsdw = np.reshape(np.swapaxes(dsdw,3,4), (h * w * n, 2, channels))
+        dsdb = np.reshape(np.swapaxes(dsdb,3,4), (h*w*n,2,channels))
 
     #print(np.max(dLdf),np.max(dfdu),np.max(dfds),np.max(dudw),np.max(dsdw),np.max(dudb),np.max(dsdb))
 
@@ -175,19 +196,18 @@ def getDerivs(weights, biases, responses, output, uncertainties):
 
  ## not terrible weights:[-0.23539651 -0.20197062 -0.03738734 -0.9411517  -0.77748915 -0.65677627
  # -0.32563077]] [ 0.34155395  0.20720649  0.19224365  1.29058724 -0.0726096   0.01480159  0.31051498]
-def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, starting_weights=None, starting_biases=None):
-    in_size = 7
+def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=1,learning_rate = .2, starting_weights=[], starting_biases=[]):
+    in_size = 6
     out_size = 2
-    if starting_weights is None:
-        in_size = 6
-        out_size = 2
-        W = np.random.uniform(0, np.sqrt(6 / (in_size + out_size)), out_size * in_size)
+    if len(starting_weights) == 0:
+        '''W = np.random.uniform(0, np.sqrt(6 / (in_size + out_size)), out_size * in_size)
         W = np.reshape(W, (out_size, in_size))
         W = (W.T / np.sum(W, axis=1)).T
-        W[1, :] *= -1
+        W[1, :] *= -1'''
+        W = np.array([[0.,0.,1.,.7,.7,.7],[-0.,0.,1.,-.7,-.7,-.7]])
     else:
         W = starting_weights
-    if starting_biases is None:
+    if len(starting_biases) == 0:
         b = np.ones(in_size) * .1
     else:
         b = starting_biases
@@ -196,7 +216,6 @@ def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, sta
     for i in range(epochs):
         print(i)
         [means, uncertainties] = getOutput(responses, W, b)
-        print(means[:,:,0,:],means[:,:,1,:])
         cv2.imshow("mask",(np.argmin(means[:,:,0,:],axis=2)).astype(np.float))
         cv2.waitKey(1)
         [dW, db] = getDerivs(W,b,responses,means,uncertainties)
@@ -205,9 +224,17 @@ def optimizeWeights(ims,depths,bkgs,bkgdepths, epochs=10,learning_rate = .2, sta
         #W /= .5*np.sum(abs(W))
         b -= db*learning_rate
         print(W,b)
+    print("done optimizing!")
     return W,b
 
-def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None, ):
+def gaussianThinning(im, kernel_size, passes=1, thresh=.45):
+    dim3 = int(np.shape(im)[0]*np.shape(im)[1]/np.size(im))
+    for i in range(passes):
+        im = cv2.GaussianBlur(im.astype(float),(kernel_size,kernel_size),0)
+        im = (im > thresh).astype(bool)
+    return im
+
+def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None):
     if os.path.isfile('bk_mean.pkl'):
         bk_mean = pickle.load(open('bk_mean.pkl',"rb"))
         bk_cov = pickle.load(open('bk_cov.pkl','rb'))
@@ -233,27 +260,51 @@ def removeBkg(ims,depths,bkgs,bkgdepths,optimize=True, W0=None, b0=None, ):
         depth_obj = np.ma.array(depths[:,:,i],mask=mask)
     return obj.filled(0), depth_obj.filled(0)
 
-def removeBackgroundThreshold(im,depth, depth_range, bk_path, man_path, bk_confidence=.4, man_confidence=.3):
-    #for i in range(3):
-        #im = cv2.GaussianBlur(im,(5,5),0)
-    #depth = cv2.GaussianBlur(depth, (5,5),0)
+def applyMask(im, mask, dims):
+    if dims==1:
+        obj = np.ma.array(im, mask=mask)
+        return obj.filled(0)
+    else:
+        obj = np.ma.array(im, mask=np.repeat(np.expand_dims(mask, 2), dims, axis=2))
+        return obj.filled(0)
+
+def getThresholdMask(im,depth,bk_path, man_path, depth_range, bk_confidence=.4, man_confidence=.3,apply_mask=False):
     print("Thresholding Image")
     hsv_im = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
     depth_mask = thresholdFn(depth, lb=depth_range[0], ub=depth_range[1], dist='step')
-    cv2.imshow("d mask", (255 * depth_mask).astype(np.uint8))
     bk_colors = analyzeBackdrop(bk_path)
     backdrop_mask = thresholdFn(hsv_im, mean=bk_colors[0], cov=bk_colors[1], dist='normal')
-    cv2.imshow("bkg mask", (255 * (backdrop_mask > bk_confidence)).astype(np.uint8))
-    man_colors=analyzeBackdrop(man_path)
+    man_colors = analyzeBackdrop(man_path)
     mannequin_mask = thresholdFn(hsv_im, mean=man_colors[0], cov=man_colors[1], dist='normal')
-    cv2.imshow("mannequin mask", (255 * (mannequin_mask > man_confidence)).astype(np.uint8))
-    cv2.waitKey(1)
 
-    mask = ~(depth_mask.astype(bool) & (backdrop_mask < bk_confidence).astype(bool) & (mannequin_mask < man_confidence).astype(bool))
-    cv2.imshow("masku",mask.astype(float))
-    obj = np.ma.array(im, mask=np.repeat(np.expand_dims(mask, 2), 3, axis=2))
-    depth_obj = np.ma.array(depth, mask=mask)
+    mask = ~(depth_mask.astype(bool) & (backdrop_mask < bk_confidence).astype(bool) & (
+                mannequin_mask < man_confidence).astype(bool))
+    return mask
+
+def removeBackgroundThreshold(im,depth, bk, depth_bk, depth_range, bk_path, man_path, bk_confidence=.4, man_confidence=.3, bk_weights=[],bk_biases=[], blur_kernel=45, blur_passes=3, blur_thresh=.43,  show_images=True):
+    #for i in range(3):
+        #im = cv2.GaussianBlur(im,(5,5),0)
+    #depth = cv2.GaussianBlur(depth, (5,5),0)
+
+    mask = getThresholdMask(im,depth,bk_path, man_path,depth_range=depth_range, bk_confidence=bk_confidence, man_confidence=man_confidence)
+    if len(bk_weights) > 0 and len(bk_biases) > 0:
+        responses = getResponses(np.expand_dims(im, 3), np.expand_dims(depth, 2), np.expand_dims(bk, 3),
+                                 np.expand_dims(depth_bk, 2), show_images=False)
+        means, _ = getOutput(responses, bk_weights, bk_biases, show_images=False)
+        means_mask = np.argmin(means[:, :, 0, :], axis=2).astype(bool)
+        mask = ~(~mask & means_mask)
+    thinned_mask = gaussianThinning(mask, blur_kernel, passes=blur_passes, thresh=blur_thresh)
+    if show_images:
+        #cv2.imshow("d mask", (255 * depth_mask).astype(np.uint8))
+        #cv2.imshow("bkg mask", (255 * (backdrop_mask > bk_confidence)).astype(np.uint8))
+        #cv2.imshow("mannequin mask", (255 * (mannequin_mask > man_confidence)).astype(np.uint8))
+        #cv2.imshow("optimizer mask", (255 * means_mask).astype(np.uint8))
+        cv2.imshow("thinned mask", thinned_mask.astype(float))
+        cv2.waitKey(1)
+    obj = np.ma.array(im, mask=np.repeat(np.expand_dims(thinned_mask, 2), 3, axis=2))
+    depth_obj = np.ma.array(depth, mask=thinned_mask)
     return obj.filled(0), depth_obj.filled(0)
+
 
 '''tanh_dist = np.tanh(dist)
 obj_certainties = np.multiply(tanh_dist,np.array(obj_weights))
