@@ -1,5 +1,5 @@
 # Clothing Auto-Modeler
-Group project for 24671 Electromechanical Systems Design course offered by Carnegie Mellon University in the Spring of 2020. This is a collective work by Justin Tunis, Shu You, and Allen Jiang.  
+Group project for 24671 Electromechanical Systems Design course offered by Carnegie Mellon University in the Spring of 2020. This is a collective work by Justin Tunis, Shu You, and Allen Jiang.
 <img src="https://i.imgur.com/NssippU.png" width="425"/> <img src="https://i.imgur.com/KsFEk0t.png" width="425"/>
 
 ## Dependencies
