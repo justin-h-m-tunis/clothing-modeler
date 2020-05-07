@@ -1,5 +1,6 @@
 # Clothing Auto-Modeler
 Group project for 24671 Electromechanical Systems Design course offered by Carnegie Mellon University in the Spring of 2020. This is a collective work by Justin Tunis, Shu You, and Allen Jiang.
+<img src="https://i.imgur.com/NssippU.png" width="425"/> <img src="https://i.imgur.com/KsFEk0t.png" width="425"/>
 
 ## Dependencies
 This project is impelemted and tested using Python 3.7.4 64 bit on Windows 10 platform. It is not tested on other python versions or platforms, but generally it should work for any python 3 versions. Hardware COM port might need to be changed according to your specific configuration. Please make sure you install the following external depencies and the code can properly import them.  
