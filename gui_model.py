@@ -8,9 +8,18 @@ from motor_camera.Camera import *
 class GuiModel(object):
     """description of class"""
 
-    def __init__(self, updateFn=lambda n: None, additional_conds= lambda n: True, macrostep_time=550,total_macrosteps=200,baudrate=9600,com='COM3'):
+    def __init__(self, updateFn=lambda n: None, additional_conds= lambda n: True, onSerialFail=lambda : print("Error! Please check hardware connectivity"), settings=None):
+        if settings is None:
+            macrostep_time=550
+            baudrate=9600
+            com='COM3'
+        else:
+            macrostep_time = int(settings['macrostep_time'])
+            print(macrostep_time)
+            baudrate = int(settings['baud'])
+            com = settings['com']
         self.pathname = "data/"
-        self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=total_macrosteps,baudrate=baudrate,com=com,onSerialFail=lambda : print("Error! Please check hardware connectivity"))
+        self.motor = Motor(macrostep_time=macrostep_time,total_macrosteps=200,baudrate=baudrate,com=str(com),onSerialFail=onSerialFail)
         self.camera = Camera()
         self.updateFn=updateFn
         self.cond = lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname) and additional_conds
@@ -18,8 +27,10 @@ class GuiModel(object):
     def set_image_path(self, img_path):
         self.pathname = img_path
 
-    def run_motor_camera(self):
-        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=False, path=self.pathname), updateFn=self.updateFn)
+    def run_motor_camera(self, img_path=None):
+        if img_path is None:
+            img_path = self.pathname
+        self.motor.fullRotation(cond=lambda num: self.camera.captureRGBD(num, show_image=True, path=img_path), updateFn=self.updateFn)
 
 
 '''

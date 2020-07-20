@@ -21,10 +21,22 @@ class GuiView(object):
         self.setup_layout()
         self.settings_panel = gui_view_settings.GuiViewSettings(parent)
 
+    def create_capture_bg(self):
+        self.capture_bg_button = tk.Button(self.left_frame, text="Capture BG", 
+            fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+
     def create_quick_start(self):
         self.q_start_button = tk.Button(self.left_frame, text="Quick Start", 
             fg="white", bg=BUTTON_COLOR, font="Ubuntu 12", width=12,
             relief="flat", pady=-1, activebackground=BUTTON_FOCUS_COLOR,
+            activeforeground="white")
+
+    def create_stop(self):
+        self.stop_button = tk.Button(self.left_frame, text="Stop", 
+            fg="white", bg=STOP_BUTTON_COLOR, font="Ubuntu 12", width=12,
+            relief="flat", pady=-1, activebackground=STOP_BUTTON_FOCUS_COLOR,
             activeforeground="white")
 
     def create_adv_options(self):
@@ -49,11 +61,19 @@ class GuiView(object):
         self.logo_label = tk.Label(self.right_frame, image = self.logo_img, bg=RIGHT_FRAME_COLOR)
 
     def create_progress_bar(self):
-        s = ttk.Style()
-        s.theme_use('clam')
+        self.progress_style = ttk.Style()
+        self.progress_style.theme_use('clam')
         TROUGH_COLOR = PROGRESS_BAR_BG
         BAR_COLOR = PROGRESS_BAR_COLOR
-        s.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR, bordercolor=TROUGH_COLOR, background=BAR_COLOR, lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
+        self.progress_style.configure("bar.Horizontal.TProgressbar", troughcolor=TROUGH_COLOR,
+            bordercolor=TROUGH_COLOR, background=BAR_COLOR,
+            lightcolor=BAR_COLOR, darkcolor=BAR_COLOR)
+        self.progress_style.layout('bar.Horizontal.TProgressbar', 
+             [('Horizontal.Progressbar.trough',
+               {'children': [('Horizontal.Progressbar.pbar',
+                              {'side': 'left', 'sticky': 'ns'})],
+                'sticky': 'nswe'}), 
+              ('Horizontal.Progressbar.label', {'sticky': ''})])
         self.progress_var = DoubleVar()
         self.progress_var.set(0)
         self.progress = tk.ttk.Progressbar(self.right_frame, orient = "horizontal", variable=self.progress_var,
@@ -62,15 +82,25 @@ class GuiView(object):
 
     def update_progress_bar(self, curr_step, max_step):
         print("Progress bar updated")
-        self.progress_var.set(int(curr_step / max_step * 100))
+        progress_percent = int(curr_step / max_step * 100)
+        self.progress_var.set(progress_percent)
+        if (progress_percent > 50):
+            self.progress_style.configure('bar.Horizontal.TProgressbar', foreground="white",
+                    text='{:g} %'.format(int(curr_step / max_step * 100))) 
+            if (progress_percent == 100):
+                self.progress_style.configure('bar.Horizontal.TProgressbar', foreground="white",
+                    text="Done!") 
+        else:
+            self.progress_style.configure('bar.Horizontal.TProgressbar', foreground=WIN_BG_COLOR,
+                    text='{:g} %'.format(int(curr_step / max_step * 100))) 
         self.progress.update()
 
-    def manage_settings(self, parent):
-        if (self.settings_open): # open settings panel
+    def manage_settings(self, parent, action=None):
+        if (action == True or (self.settings_open and action == None)): # open settings panel
             print("Settings panel open")
             self.settings_panel.setup_layout()
             self.settings_open = False
-        else:
+        elif (action == False or (not self.settings_open and action == None)):
             print("Settings panel close")
             self.settings_panel.forget_layout()
             self.settings_open = True
@@ -93,14 +123,29 @@ class GuiView(object):
         self.create_quick_start()
         self.create_adv_options()
         self.create_progress_bar()
+        self.create_capture_bg()
+        self.create_stop()
 
     def setup_layout(self):
         self.left_frame.place(rely=0, relx=0, relheight=1, relwidth=WIN_SPLIT)
         self.right_frame.place(rely=0, relx=WIN_SPLIT, relheight=1, relwidth=1-WIN_SPLIT)
         self.intro_text.place(anchor="center", relx=0.5, rely=0.1)
         self.logo_label.place(anchor="center", relx=0.5, rely=0.5)
-        self.q_start_button.place(anchor="center", relx=0.5, rely=0.8)
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.7)
+        self.capture_bg_button.place(anchor="center", relx=0.5, rely=0.8)
         self.adv_option.place(anchor="center", relx=0.5, rely=0.87)
         self.progress.place(anchor="center", relx=0.5, rely=0.87)
+
+    def place_q_start(self):
+        self.q_start_button.place(anchor="center", relx=0.5, rely=0.7)
+
+    def forget_q_start(self):
+        self.q_start_button.place_forget()
+
+    def place_stop(self):
+        self.stop_button.place(anchor="center", relx=0.5, rely=0.7)
+
+    def forget_stop(self):
+        self.stop_button.place_forget()
 
 
